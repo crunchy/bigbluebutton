@@ -66,8 +66,8 @@
 			private function onCreationComplete():void {			
 				var p:Object = application.parameters;
 
-                host = p.HOST;
-                room = p.ROOM;
+				host = p.HOST;
+				room = p.ROOM;
 				logoutURL = p.LOGOUTURL;
 
 
