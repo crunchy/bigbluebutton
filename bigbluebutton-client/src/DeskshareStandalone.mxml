@@ -64,11 +64,13 @@
 			private var service:DeskshareService = new DeskshareService();
 			
 			private function onCreationComplete():void {			
-			    var p:QueryStringParameters = new QueryStringParameters();
-				p.collectParameters();
-				logoutURL = p.getParameter("LOGOUTURL");
-				host = p.getParameter("HOST");
-				room = p.getParameter("ROOM");
+				var p:Object = application.parameters;
+
+                host = p.HOST;
+                room = p.ROOM;
+				logoutURL = p.LOGOUTURL;
+
+
 				service.connect(host+"/"+room);
 				
 				cursor.graphics.lineStyle(6, 0xFF0000, 0.6);
