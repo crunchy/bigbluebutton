@@ -33,7 +33,15 @@ public class DeskshareSystemTray {
 		listener = l;
 	}
 	
+	protected static boolean isMac() {
+		return (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0);
+	}
+	
 	public void displayIconOnSystemTray(final Image image, final boolean enableActions) {
+		// disable this entirely on non-Windows OS because it's annoying
+		if (isMac()) {
+			return;
+		}
 		Runnable runner = new Runnable() {
 			public void run() {
 				if (SystemTray.isSupported()) {
@@ -48,7 +56,6 @@ public class DeskshareSystemTray {
 								trayIcon, "Stop Desktop Sharing", "Stop sharing your desktop", TrayIcon.MessageType.INFO));
 						popup.add(stopItem);						
 					}
-
 		          
 					try {
 						tray.add(trayIcon);
@@ -63,13 +70,45 @@ public class DeskshareSystemTray {
 		};
 		EventQueue.invokeLater(runner);
 	}
-
-    public void removeIconFromSystemTray() {
-    	if (tray != null && trayIcon != null) {
-    		tray.remove(trayIcon);
-    	}
+	
+	/*****************************************************************************
+    ;  disconnectIconSystemTrayMessage
+    ;----------------------------------------------------------------------------
+	; DESCRIPTION
+	;   This routine is used to change icon system tray message string 
+	;   to disconnect.
+	;
+	; RETURNS : N/A
+	;
+	; INTERFACE NOTES
+	; 
+	;       INPUT : N/A
+	; 
+	;       OUTPUT : N/A
+	; 
+	; IMPLEMENTATION
+	;
+	; HISTORY
+	; __date__ :        PTS:  
+	; 2010.11.19		problem 272
+	;
+	******************************************************************************/
+	public void disconnectIconSystemTrayMessage(){
+		if (isMac()) {
+			return;
+		}
+		trayIcon.setToolTip("Disconnected");
+		trayIcon.displayMessage("Deskshare Disconnected" , 
+				                "You're disconnected from desktop sharing", 
+				                TrayIcon.MessageType.ERROR);
+	} // END FUNCTION disconnectIconSystemTrayMessage
+	
+  public void removeIconFromSystemTray() {
+  	if (tray != null && trayIcon != null) {
+		 		tray.remove(trayIcon);
     }
-    
+	}
+	
 	class StopSharingListener implements ActionListener {
 		TrayIcon trayIcon;
 		String title;
@@ -91,5 +130,4 @@ public class DeskshareSystemTray {
 			}
 		}
 	}
-
 }
