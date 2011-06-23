@@ -98,9 +98,6 @@ public class DeskshareSystemTray {
 			return;
 		}
 		trayIcon.setToolTip("Disconnected");
-		trayIcon.displayMessage("Deskshare Disconnected" , 
-				                "You're disconnected from desktop sharing", 
-				                TrayIcon.MessageType.ERROR);
 	} // END FUNCTION disconnectIconSystemTrayMessage
 	
   public void removeIconFromSystemTray() {
