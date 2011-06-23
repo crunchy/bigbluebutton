@@ -42,13 +42,12 @@ public class ScreenCaptureTaker {
 		capture.setY(y);
 	}
 	
-	private void captureScreen() {		
-//		System.out.println("----- Taking screen capture -----");
+	private long captureScreen() {		
 		long start = System.currentTimeMillis();
 		BufferedImage image = capture.takeSingleSnapshot();
-		long end = System.currentTimeMillis();
-//		System.out.println("Capture took " + (end - start) + " millis");
+		long duration = System.currentTimeMillis() - start;
 		notifyListeners(image);
+		return duration;
 	}
 	
 	private void notifyListeners(BufferedImage image) {
@@ -68,14 +67,33 @@ public class ScreenCaptureTaker {
 	}
 	
 	public void start() {
+		// System.out.println("Starting screen capture.");		
 		startCapture = true;
 		screenCapRunner =  new Runnable() {
 			public void run() {
+				// manually adjust the pause depending on how long it takes to capture
+				// but not too often (once every 100 frames)
+				// the idea is to capture as often as possible to hit some FPS
+				// all durations in ms
+				long captureDuration = 0;
+				int cycle = 0;  // when this reaches 100, re-examine the pause duration
+				int idealPauseDuration = 100;
+				int maxCapturePauseDuration = 120;
+				int pauseDuration = idealPauseDuration;
+				
 				while (startCapture){
-					captureScreen();
-					pause(200);
+					captureDuration = captureScreen();
+					pause(pauseDuration);
+					if (++cycle >= 100) {
+						cycle = 0;
+						if (captureDuration + pauseDuration > maxCapturePauseDuration) {
+							pauseDuration = Math.max(10, (int)(maxCapturePauseDuration - captureDuration)); // at least 10
+						} else {
+							pauseDuration = idealPauseDuration;
+						}
+					}
 				}
-				System.out.println("Stopping screen capture.");		
+				// System.out.println("Stopping screen capture.");		
 			}
 		};
 		screenCapTakerExec.execute(screenCapRunner);	
