@@ -30,14 +30,37 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 
     private static LifeLine lifeline;
     private static DeskshareClient client;
+    private static final int DESKSHARE_PORT = 9123;
 
     public static void main(String[] args) {
         MyDeskShareMain dsMain = new MyDeskShareMain();
-
-        String hostValue        = "bbb-staging.crunchconnect.com";
+	
+	String hostValue        = "bbb-staging.crunchconnect.com";
         Integer listenPortValue = 9125;
         String iconValue        = "bbb.gif";
-
+	String roomId		= "mr-510";
+	
+	// cli: host room port (all optional)
+	switch(args.length) {
+	    case 3:
+		int port = 0;
+		try {
+		    port = Integer.parseInt(args[2]);
+		} catch (NumberFormatException e) {
+		    System.err.println("Port must be integer");
+		}
+		if (port > 0) {
+		    listenPortValue = (Integer)port;
+		}
+		// falling through to next case on purpose
+	    case 2:
+		roomId = args[1];
+		// falling through to next case on purpose
+	    case 1:
+		hostValue = args[0];
+	    default:
+	}
+	
         Image image = Toolkit.getDefaultToolkit().getImage(iconValue);
 
         lifeline = new LifeLine(listenPortValue, dsMain);
@@ -45,8 +68,8 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 
         client = new DeskshareClient.NewBuilder()
                 .host(hostValue)
-                .port(9123)
-                .room("mr-510")
+                .port(DESKSHARE_PORT)
+                .room(roomId)
                 .captureWidth(800)
                 .captureHeight(600)
                 .scaleWidth(800)
@@ -65,7 +88,7 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
         client.start();
 
         try {
-            System.out.println("Waiting for trigger to Stop client.");
+            System.out.println("Waiting for trigger to stop client.");
             ExitCode reason = dsMain.exitReasonQ.take();
             System.out.println("Stopping client.");
             client.stop();
