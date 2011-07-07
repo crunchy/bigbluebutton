@@ -33,6 +33,7 @@ import java.awt.Robot;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 
+
 /**
  * The Capture class uses the java Robot class to capture the screen.
  * @author Snap
@@ -44,6 +45,10 @@ public class ScreenCapture {
 	private int scaleWidth, scaleHeight, x,y, captureWidth, captureHeight;
 	private boolean quality;
 	private GraphicsConfiguration graphicsConfig;
+        private static final int DEFAULT_TYPE = BufferedImage.TYPE_USHORT_555_RGB;	
+	// try sharing the image objects instead of creating them every time
+	// roger 2011-06-20
+	private BufferedImage mainImage, copyImage, tmpImage;
 	
 	public ScreenCapture(int x, int y, int captureWidth, int captureHeight, int scaleWidth, int scaleHeight, boolean quality) {
 		this.captureWidth = captureWidth;
@@ -60,20 +65,28 @@ public class ScreenCapture {
 		this.scaleHeight = scaleHeight;
 		this.quality = quality;
 		GraphicsEnvironment je = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	    GraphicsDevice js = je.getDefaultScreenDevice();
-
-	    graphicsConfig = js.getDefaultConfiguration();
+	        GraphicsDevice js = je.getDefaultScreenDevice();
+                graphicsConfig = js.getDefaultConfiguration();
 	}
-	
-	public BufferedImage takeSingleSnapshot() {
-		BufferedImage capturedImage = robot.createScreenCapture(this.screenBounds);
+        
+        public BufferedImage takeSingleSnapshot() {
+		mainImage = robot.createScreenCapture(this.screenBounds);
+		
+                // copy image to lower quality as as performance test
+		tmpImage = new BufferedImage(mainImage.getWidth(), mainImage.getHeight(), DEFAULT_TYPE);
+                Graphics2D g = tmpImage.createGraphics();
+                g.drawRenderedImage(mainImage, null);
+                g.dispose();
+                mainImage = tmpImage;
+		// end copy                                    
+		
 		if (needToScaleImage()) {
 			if (quality) {
-				return useQuality(capturedImage);
+				return useQuality();
 			}
-			return getScaledInstance(capturedImage, scaleWidth, scaleHeight, RenderingHints.VALUE_INTERPOLATION_BICUBIC, true);
+			return getScaledInstance(scaleWidth, scaleHeight, RenderingHints.VALUE_INTERPOLATION_BICUBIC, true);
 		} else {
-			return capturedImage;
+			return mainImage;
 		}
 	}
 	
@@ -105,15 +118,16 @@ public class ScreenCapture {
 		return (captureWidth != scaleWidth && captureHeight != scaleHeight);
 	}
 
-	private BufferedImage useQuality(BufferedImage image) {	    
-	    BufferedImage resultImage = graphicsConfig.createCompatibleImage(scaleWidth, scaleHeight, image.getType());
-	    resultImage.setAccelerationPriority(1);
+	private BufferedImage useQuality() {	    
+		tmpImage = graphicsConfig.createCompatibleImage(scaleWidth, scaleHeight, mainImage.getType());
+		tmpImage.setAccelerationPriority(1);
 	    
-		Graphics2D g2 = resultImage.createGraphics();
-		Image scaledImage = image.getScaledInstance(scaleWidth, scaleHeight, Image.SCALE_AREA_AVERAGING);
+		Graphics2D g2 = tmpImage.createGraphics();
+		Image scaledImage = mainImage.getScaledInstance(scaleWidth, scaleHeight, Image.SCALE_AREA_AVERAGING);
 		g2.drawImage(scaledImage, 0, 0, scaleWidth, scaleHeight, null);
 		g2.dispose();
-		return resultImage;
+		//return resultImage;
+		return tmpImage;
 	}
 		 
 	/**
@@ -122,7 +136,7 @@ public class ScreenCapture {
      * Convenience method that returns a scaled instance of the
      * provided {@code BufferedImage}.
      *
-     * @param img the original image to be scaled
+     * removed @param img the original image to be scaled, using shared object var instead
      * @param targetWidth the desired width of the scaled instance,
      *    in pixels
      * @param targetHeight the desired height of the scaled instance,
@@ -140,53 +154,48 @@ public class ScreenCapture {
      *    the {@code BILINEAR} hint is specified)
      * @return a scaled version of the original {@code BufferedImage}
      */
-    public BufferedImage getScaledInstance(BufferedImage img,
-                                           int targetWidth,
-                                           int targetHeight,
-                                           Object hint,
-                                           boolean higherQuality)
-    {
-        int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-        BufferedImage ret = (BufferedImage)img;
-        int w, h;
-        if (higherQuality) {
-            // Use multi-step technique: start with original size, then
-            // scale down in multiple passes with drawImage()
-            // until the target size is reached
-            w = img.getWidth();
-            h = img.getHeight();
-        } else {
-            // Use one-step technique: scale directly from original
-            // size to target size with a single drawImage() call
-            w = targetWidth;
-            h = targetHeight;
-        }
+	public BufferedImage getScaledInstance(	int targetWidth,
+						int targetHeight,
+						Object hint,
+						boolean higherQuality) {
+		copyImage = mainImage;
+		int w, h;
+		if (higherQuality) {
+		    // Use multi-step technique: start with original size, then
+		    // scale down in multiple passes with drawImage()
+		    // until the target size is reached
+		    w = mainImage.getWidth();
+		    h = mainImage.getHeight();
+		} else {
+		    // Use one-step technique: scale directly from original
+		    // size to target size with a single drawImage() call
+		    w = targetWidth;
+		    h = targetHeight;
+		}
         
-        do {
-            if (higherQuality && w > targetWidth) {
-                w /= 2;
-                if (w < targetWidth) {
-                    w = targetWidth;
-                }
-            }
+		do {
+			if (higherQuality && w > targetWidth) {
+				w /= 2;
+				if (w < targetWidth) {
+				    w = targetWidth;
+				}
+			}
 
-            if (higherQuality && h > targetHeight) {
-                h /= 2;
-                if (h < targetHeight) {
-                    h = targetHeight;
-                }
-            }
+			if (higherQuality && h > targetHeight) {
+				h /= 2;
+				if (h < targetHeight) {
+				    h = targetHeight;
+				}
+			}
 
-            BufferedImage tmp = new BufferedImage(w, h, type);
-            Graphics2D g2 = tmp.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, hint);
-            g2.drawImage(ret, 0, 0, w, h, null);
-            g2.dispose();
-
-            ret = tmp;
-        } while (w != targetWidth || h != targetHeight);
-
-        return ret;
-    }
-	
+			tmpImage = new BufferedImage(w, h, DEFAULT_TYPE);
+			Graphics2D g2 = tmpImage.createGraphics();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, hint);
+			g2.drawImage(copyImage, 0, 0, w, h, null);
+			g2.dispose();
+			copyImage = tmpImage;
+		} while (w != targetWidth || h != targetHeight);
+        
+		return copyImage;
+	}
 }
