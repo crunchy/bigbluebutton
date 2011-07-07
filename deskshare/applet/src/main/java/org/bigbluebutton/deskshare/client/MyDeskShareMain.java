@@ -26,101 +26,101 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MyDeskShareMain implements ClientListener, LifeLineListener {
-    private final BlockingQueue<ExitCode> exitReasonQ = new LinkedBlockingQueue<ExitCode>(5);
+	private final BlockingQueue<ExitCode> exitReasonQ = new LinkedBlockingQueue<ExitCode>(5);
 
-    private static LifeLine lifeline;
-    private static DeskshareClient client;
-    private static final int DESKSHARE_PORT = 9123;
+	private static LifeLine lifeline;
+	private static DeskshareClient client;
+	private static final int DESKSHARE_PORT = 9123;
 
-    public static void main(String[] args) {
-        MyDeskShareMain dsMain = new MyDeskShareMain();
-	
-	String hostValue        = "bbb-staging.crunchconnect.com";
-        Integer listenPortValue = 9125;
-        String iconValue        = "bbb.gif";
-	String roomId		= "mr-510";
-	
-	// cli: host room port (all optional)
-	switch(args.length) {
-	    case 3:
-		int port = 0;
+	public static void main(String[] args) {
+		MyDeskShareMain dsMain = new MyDeskShareMain();
+
+		String hostValue = "bbb-staging.crunchconnect.com";
+		Integer listenPortValue = 9125;
+		String iconValue = "bbb.gif";
+		String roomId = "mr-4126";
+
+		// cli: host room port (all optional)
+		switch (args.length) {
+			case 3:
+				int port = 0;
+				try {
+					port = Integer.parseInt(args[2]);
+				} catch (NumberFormatException e) {
+					System.err.println("Port must be integer");
+				}
+				if (port > 0) {
+					listenPortValue = (Integer) port;
+				}
+				// falling through to next case on purpose
+			case 2:
+				roomId = args[1];
+				// falling through to next case on purpose
+			case 1:
+				hostValue = args[0];
+			default:
+		}
+
+		Image image = Toolkit.getDefaultToolkit().getImage(iconValue);
+
+		lifeline = new LifeLine(listenPortValue, dsMain);
+		lifeline.listen();
+
+		client = new DeskshareClient.NewBuilder()
+			.host(hostValue)
+			.port(DESKSHARE_PORT)
+			.room(roomId)
+			.captureWidth(800)
+			.captureHeight(600)
+			.scaleWidth(800)
+			.scaleHeight(600)
+			.quality(false)
+			.aspectRatio(false)
+			.x(0)
+			.y(0)
+			.fullScreen(true)
+			.httpTunnel(false)
+			.trayIcon(image)
+			.enableTrayIconActions(false)
+			.build();
+
+		client.addClientListener(dsMain);
+		client.start();
+
 		try {
-		    port = Integer.parseInt(args[2]);
-		} catch (NumberFormatException e) {
-		    System.err.println("Port must be integer");
+			System.out.println("Waiting for trigger to stop client.");
+			ExitCode reason = dsMain.exitReasonQ.take();
+			System.out.println("Stopping client.");
+			client.stop();
+			lifeline.disconnect();
+			System.exit(reason.getExitCode());
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(500);
 		}
-		if (port > 0) {
-		    listenPortValue = (Integer)port;
-		}
-		// falling through to next case on purpose
-	    case 2:
-		roomId = args[1];
-		// falling through to next case on purpose
-	    case 1:
-		hostValue = args[0];
-	    default:
 	}
-	
-        Image image = Toolkit.getDefaultToolkit().getImage(iconValue);
 
-        lifeline = new LifeLine(listenPortValue, dsMain);
-        lifeline.listen();
+	public void onClientStop(ExitCode reason) {
+		queueExitCode(reason);
+	}
 
-        client = new DeskshareClient.NewBuilder()
-                .host(hostValue)
-                .port(DESKSHARE_PORT)
-                .room(roomId)
-                .captureWidth(800)
-                .captureHeight(600)
-                .scaleWidth(800)
-                .scaleHeight(600)
-                .quality(false)
-                .aspectRatio(false)
-                .x(0)
-                .y(0)
-                .fullScreen(true)
-                .httpTunnel(false)
-                .trayIcon(image)
-                .enableTrayIconActions(false)
-                .build();
+	@Override
+	public void disconnected(ExitCode reason) {
+		queueExitCode(reason);
+	}
 
-        client.addClientListener(dsMain);
-        client.start();
-
-        try {
-            System.out.println("Waiting for trigger to stop client.");
-            ExitCode reason = dsMain.exitReasonQ.take();
-            System.out.println("Stopping client.");
-            client.stop();
-            lifeline.disconnect();
-            System.exit(reason.getExitCode());
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            System.exit(500);
-        }
-    }
-
-    public void onClientStop(ExitCode reason) {
-        queueExitCode(reason);
-    }
-
-    @Override
-    public void disconnected(ExitCode reason) {
-        queueExitCode(reason);
-    }
-
-    private void queueExitCode(ExitCode reason) {
-        try {
+	private void queueExitCode(ExitCode reason) {
+		try {
 //			System.out.println("Trigger stop client ." + exitReasonQ.remainingCapacity());
-            exitReasonQ.put(reason);
-            System.out.println("Triggered stop client.");
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            client.stop();
-            lifeline.disconnect();
-            System.exit(reason.getExitCode());
-        }
-    }
+			exitReasonQ.put(reason);
+			System.out.println("Triggered stop client.");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			client.stop();
+			lifeline.disconnect();
+			System.exit(reason.getExitCode());
+		}
+	}
 }
