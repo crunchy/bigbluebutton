@@ -58,25 +58,8 @@ public class BlockManager {
     }
     
     public void processCapturedScreen(BufferedImage capturedScreen) {    	
-    	long start = System.currentTimeMillis();
-
     	Vector<Integer> changedBlocks = new Vector<Integer>();
-/*		
-		int numberOfBlocks = numColumns * numRows;
-		for (int position = 1; position <= numberOfBlocks; position++) {
-			Block block = blocksMap.get(new Integer(position));
-        	if (block.hasChanged(capturedScreen)) {
-        		changedBlocks.add(new Integer(position));        		
-        	}
-		}  
-    	
-		if (changedBlocks.size() > 0) {
-			Integer[] bc = new Integer[changedBlocks.size()];
-			System.arraycopy(changedBlocks.toArray(), 0, bc, 0, bc.length);
-			changedBlocks.clear();
-			notifyChangedBlockListener(new BlockMessage(bc));
-		}
-*/
+
 		
 		int numberOfBlocks = numColumns * numRows;
 		for (int position = 1; position <= numberOfBlocks; position++) {
