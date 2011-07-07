@@ -198,18 +198,16 @@ public final class ScreenVideoEncoder {
 	}
 		    
 	public static String toStringBits(byte value) {
-	    int displayMask = 1 << 7;
-	    StringBuffer buf = new StringBuffer(8);
-			   
-	    for ( int c = 1; c <= 8; c++ ) 
-	    {
-	        buf.append((value & displayMask) == 0 ? '0' : '1');
-	        value <<= 1;
-			       
-	        if ( c % 8 == 0 )
-		        buf.append( ' ' );
-	    }
-			   
-	    return buf.toString();
-	}    
+		int displayMask = 1 << 7;
+		StringBuffer buf = new StringBuffer(8);
+
+		for ( int c = 1; c <= 8; c++ ) {
+			buf.append((value & displayMask) == 0 ? '0' : '1');
+			value <<= 1;
+			if ( c % 8 == 0 )
+				buf.append( ' ' );
+		}
+
+		return buf.toString();
+	}
 }
