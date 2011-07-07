@@ -21,14 +21,15 @@
 */
 package org.bigbluebutton.deskshare.client.blocks;
 
-import java.awt.Point;
+import org.bigbluebutton.deskshare.client.net.EncodedBlockData;
+import org.bigbluebutton.deskshare.common.Dimension;
+import org.bigbluebutton.deskshare.common.PixelExtractException;
+import org.bigbluebutton.deskshare.common.ScreenVideoEncoder;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.bigbluebutton.deskshare.client.net.EncodedBlockData;
-import org.bigbluebutton.deskshare.common.PixelExtractException;
-import org.bigbluebutton.deskshare.common.ScreenVideoEncoder;
-import org.bigbluebutton.deskshare.common.Dimension;
 
 public final class Block {   
 	Random random = new Random();
@@ -57,7 +58,7 @@ public final class Block {
         	}  
             
             if (! dirtyBlock.get()) {
-                if ((! checksumSame(capturedPixels)) || sendKeepAliveBlock()) {
+                if ((isChecksumDifferent(capturedPixels)) || sendKeepAliveBlock()) {
                 	dirtyBlock.set(true);
                 	return true;
                 }            	
@@ -100,8 +101,8 @@ public final class Block {
         return new EncodedBlockData(position, encodedBlock);		
     }
     
-    private boolean checksumSame(int[] pixels) {
-    	return checksum.isChecksumSame(convertIntPixelsToBytePixels(pixels)); 
+    private boolean isChecksumDifferent(int[] pixels) {
+    	return !checksum.isChecksumSame(convertIntPixelsToBytePixels(pixels));
     }
           
     private byte[] convertIntPixelsToBytePixels(int[] pixels) {
