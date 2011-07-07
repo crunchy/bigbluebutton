@@ -82,7 +82,7 @@ public class SocketScreenVideoSender implements ScreenCaptureSender {
 							e.printStackTrace();
 						}
 					} catch (InterruptedException e) {
-						System.out.println("InterruptedExeption while taking event.");
+						System.out.println("InterruptedException while taking event.");
 					}
 				}
 			}
