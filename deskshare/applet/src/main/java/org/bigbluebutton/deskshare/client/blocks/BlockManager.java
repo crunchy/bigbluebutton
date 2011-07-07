@@ -26,6 +26,7 @@ import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -58,24 +59,57 @@ public class BlockManager {
 	}
 
 	public void processCapturedScreen(BufferedImage capturedScreen) {
+		Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
+
+		int changedCount = changedBlocks.size();
+
+		System.out.println("Changed Blocks: " + changedCount);
+
+		if (changedCount > 0) {
+			partitionBlockMessages(changedBlocks, numColumns);
+		}
+	}
+
+	private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen) {
 		Vector<Integer> changedBlocks = new Vector<Integer>();
 
 
 		int numberOfBlocks = numColumns * numRows;
+
 		for (int position = 1; position <= numberOfBlocks; position++) {
 			Block block = blocksMap.get(position);
+
 			if (block.hasChanged(capturedScreen)) {
 				changedBlocks.add(position);
 			}
-
-			if ((position % numColumns == 0) && (changedBlocks.size() > 0)) {
-				Integer[] bc = new Integer[changedBlocks.size()];
-				System.arraycopy(changedBlocks.toArray(), 0, bc, 0, bc.length);
-				changedBlocks.clear();
-				notifyChangedBlockListener(new BlockMessage(bc));
-			}
 		}
+		return changedBlocks;
+	}
 
+	private void partitionBlockMessages(Vector<Integer> changedBlocks,
+	                                    int blocksPerSection) {
+		int changedCount = changedBlocks.size();
+
+		List<Integer> section;
+		Integer[] bc;
+
+		System.out.println("Total Changed Blocks: " + changedCount);
+
+		for (int start = 0; start <= changedCount; start += blocksPerSection) {
+			int offset = start + blocksPerSection;
+
+			if (offset > changedCount) { offset = changedCount; }
+
+			section = changedBlocks.subList(start, offset);
+
+			bc = new Integer[section.size()];
+			section.toArray(bc);
+
+			System.out.println("Notifying Changed Blocks: " +
+				section.size());
+
+			notifyChangedBlockListener(new BlockMessage(bc));
+		}
 	}
 
 	private void notifyChangedBlockListener(BlockMessage position) {
