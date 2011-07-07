@@ -124,23 +124,23 @@ public final class Block {
     }
     
     public int getWidth() {
-        return new Integer(dim.getWidth()).intValue();
+        return dim.getWidth();
     }
     
     public int getHeight() {
-        return new Integer(dim.getHeight()).intValue();
+        return dim.getHeight();
     }
     
     public int getPosition() {
-		return new Integer(position).intValue();
+		return position;
 	}
     
     public int getX() {
-		return new Integer(location.x).intValue();
+		return location.x;
 	}
 
     public int getY() {
-		return new Integer(location.y).intValue();
+		return location.y;
 	}
 	
     Dimension getDimension() {
