@@ -32,122 +32,122 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class Block {
-	Random random = new Random();
-	private final BlockChecksum checksum;
-	private final Dimension dim;
-	private final int position;
-	private final Point location;
-	private int[] capturedPixels;
-	private final Object pixelsLock = new Object();
-	private AtomicBoolean dirtyBlock = new AtomicBoolean(false);
-	private long lastSent = System.currentTimeMillis();
+    Random random = new Random();
+    private final BlockChecksum checksum;
+    private final Dimension dim;
+    private final int position;
+    private final Point location;
+    private int[] capturedPixels;
+    private final Object pixelsLock = new Object();
+    private AtomicBoolean dirtyBlock = new AtomicBoolean(false);
+    private long lastSent = System.currentTimeMillis();
 
-	Block(Dimension dim, int position, Point location) {
-		checksum = new BlockChecksum();
-		this.dim = dim;
-		this.position = position;
-		this.location = location;
-	}
+    Block(Dimension dim, int position, Point location) {
+	checksum = new BlockChecksum();
+	this.dim = dim;
+	this.position = position;
+	this.location = location;
+    }
 
-	public boolean hasChanged(BufferedImage capturedScreen) {
-		synchronized (pixelsLock) {
-			try {
-				capturedPixels = ScreenVideoEncoder.getPixels(capturedScreen, getX(), getY(), getWidth(), getHeight());
-			} catch (PixelExtractException e) {
-				System.out.println(e.toString());
-			}
+    public boolean hasChanged(BufferedImage capturedScreen) {
+	synchronized (pixelsLock) {
+	    try {
+		capturedPixels = ScreenVideoEncoder.getPixels(capturedScreen, getX(), getY(), getWidth(), getHeight());
+	    } catch (PixelExtractException e) {
+		System.out.println(e.toString());
+	    }
 
-			if (!dirtyBlock.get()) {
-				if ((isChecksumDifferent(capturedPixels)) || sendKeepAliveBlock()) {
-					dirtyBlock.set(true);
-					return true;
-				}
-			}
+	    if (!dirtyBlock.get()) {
+		if ((isChecksumDifferent(capturedPixels)) || sendKeepAliveBlock()) {
+		    dirtyBlock.set(true);
+		    return true;
 		}
-
-		return false;
+	    }
 	}
 
-	private boolean isKeepAliveBlock() {
-		// Use block 1 as our keepalive block. The keepalive block is our audit so that the server knows
-		// that the applet is still connected to the server. So it there's no change in the desktop, the applet
-		// should still send this keepalive block.
-		return position == 1;
+	return false;
+    }
+
+    private boolean isKeepAliveBlock() {
+	// Use block 1 as our keepalive block. The keepalive block is our audit so that the server knows
+	// that the applet is still connected to the server. So it there's no change in the desktop, the applet
+	// should still send this keepalive block.
+	return position == 1;
+    }
+
+    private boolean sendKeepAliveBlock() {
+	long now = System.currentTimeMillis();
+	if (isKeepAliveBlock() && (now - lastSent > 30000)) {
+	    // Send keepalive block every 30 seconds.
+	    lastSent = now;
+	    System.out.println("Sending keep alive block!");
+	    return true;
+	}
+	return false;
+    }
+
+    public void sent() {
+	dirtyBlock.set(false);
+    }
+
+    public EncodedBlockData encode() {
+	int[] pixelsCopy = new int[capturedPixels.length];
+
+	synchronized (pixelsLock) {
+	    System.arraycopy(capturedPixels, 0, pixelsCopy, 0, capturedPixels.length);
 	}
 
-	private boolean sendKeepAliveBlock() {
-		long now = System.currentTimeMillis();
-		if (isKeepAliveBlock() && (now - lastSent > 30000)) {
-			// Send keepalive block every 30 seconds.
-			lastSent = now;
-			System.out.println("Sending keep alive block!");
-			return true;
-		}
-		return false;
+	byte[] encodedBlock = ScreenVideoEncoder.encodePixels(pixelsCopy, getWidth(), getHeight());
+	return new EncodedBlockData(position, encodedBlock);
+    }
+
+    private boolean isChecksumDifferent(int[] pixels) {
+	return !checksum.isChecksumSame(convertIntPixelsToBytePixels(pixels));
+    }
+
+    private byte[] convertIntPixelsToBytePixels(int[] pixels) {
+	byte[] p = new byte[pixels.length * 3];
+	int position = 0;
+
+	for (int pixel : pixels) {
+	    byte red = (byte) ((pixel >> 16) & 0xff);
+	    byte green = (byte) ((pixel >> 8) & 0xff);
+	    byte blue = (byte) (pixel & 0xff);
+
+	    // Sequence should be BGR
+	    p[position++] = blue;
+	    p[position++] = green;
+	    p[position++] = red;
 	}
 
-	public void sent() {
-		dirtyBlock.set(false);
-	}
+	return p;
+    }
 
-	public EncodedBlockData encode() {
-		int[] pixelsCopy = new int[capturedPixels.length];
+    public int getWidth() {
+	return dim.getWidth();
+    }
 
-		synchronized (pixelsLock) {
-			System.arraycopy(capturedPixels, 0, pixelsCopy, 0, capturedPixels.length);
-		}
+    public int getHeight() {
+	return dim.getHeight();
+    }
 
-		byte[] encodedBlock = ScreenVideoEncoder.encodePixels(pixelsCopy, getWidth(), getHeight());
-		return new EncodedBlockData(position, encodedBlock);
-	}
+    public int getPosition() {
+	return position;
+    }
 
-	private boolean isChecksumDifferent(int[] pixels) {
-		return !checksum.isChecksumSame(convertIntPixelsToBytePixels(pixels));
-	}
+    public int getX() {
+	return location.x;
+    }
 
-	private byte[] convertIntPixelsToBytePixels(int[] pixels) {
-		byte[] p = new byte[pixels.length * 3];
-		int position = 0;
+    public int getY() {
+	return location.y;
+    }
 
-		for (int pixel : pixels) {
-			byte red = (byte) ((pixel >> 16) & 0xff);
-			byte green = (byte) ((pixel >> 8) & 0xff);
-			byte blue = (byte) (pixel & 0xff);
+    Dimension getDimension() {
+	return new Dimension(dim.getWidth(), dim.getHeight());
+    }
 
-			// Sequence should be BGR
-			p[position++] = blue;
-			p[position++] = green;
-			p[position++] = red;
-		}
-
-		return p;
-	}
-
-	public int getWidth() {
-		return dim.getWidth();
-	}
-
-	public int getHeight() {
-		return dim.getHeight();
-	}
-
-	public int getPosition() {
-		return position;
-	}
-
-	public int getX() {
-		return location.x;
-	}
-
-	public int getY() {
-		return location.y;
-	}
-
-	Dimension getDimension() {
-		return new Dimension(dim.getWidth(), dim.getHeight());
-	}
-
-	Point getLocation() {
-		return new Point(location.x, location.y);
-	}
+    Point getLocation() {
+	return new Point(location.x, location.y);
+    }
 }
