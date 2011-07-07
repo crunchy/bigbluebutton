@@ -28,7 +28,6 @@ import org.bigbluebutton.deskshare.common.ScreenVideoEncoder;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class Block {
@@ -56,11 +55,9 @@ public final class Block {
 		System.out.println(e.toString());
 	    }
 
-	    if (!dirtyBlock.get()) {
-		if ((isChecksumDifferent(capturedPixels)) || sendKeepAliveBlock()) {
-		    dirtyBlock.set(true);
-		    return true;
-		}
+	    if (!dirtyBlock.get() && (isChecksumDifferent(capturedPixels) || sendKeepAliveBlock())) {
+		dirtyBlock.set(true);
+		return true;
 	    }
 	}
 
@@ -84,6 +81,7 @@ public final class Block {
 	}
 	return false;
     }
+
 
     public void sent() {
 	dirtyBlock.set(false);
