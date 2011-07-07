@@ -109,12 +109,12 @@ public class BlockManager {
 	}
     
 	public void blockSent(int position) {
-		Block block = (Block) blocksMap.get(position);
+		Block block = blocksMap.get(position);
 		block.sent();
 	}
 	
 	public Block getBlock(int position) {
-		return (Block) blocksMap.get(position);
+		return blocksMap.get(position);
 	}
 	
     public int getRowCount() {
