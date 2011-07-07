@@ -32,7 +32,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class Block {
-    Random random = new Random();
     private final BlockChecksum checksum;
     private final Dimension dim;
     private final int position;
