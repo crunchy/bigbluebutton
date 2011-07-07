@@ -34,7 +34,6 @@ public class BlockManager {
     private int numColumns;
     private int numRows;
     
-    private BlockFactory factory;
     private ChangedBlocksListener listeners;
     private Dimension screenDim, blockDim;
     
@@ -47,6 +46,7 @@ public class BlockManager {
     	blockDim = tile;
     	
     	factory = new BlockFactory(screen, tile);
+	BlockFactory factory = new BlockFactory(screen, tile);
         
         numColumns = factory.getColumnCount();
         numRows = factory.getRowCount();
