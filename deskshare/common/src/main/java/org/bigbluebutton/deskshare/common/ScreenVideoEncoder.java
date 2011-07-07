@@ -30,14 +30,12 @@ public final class ScreenVideoEncoder {
 	private static byte SCREEN_VIDEO_CODEC_ID = 0x03;
 	
 	public static int[] getPixelsFromImage(BufferedImage image) {
-		int[] picpixels = ((DataBufferInt)(image).getRaster().getDataBuffer()).getData();
-		
-		return picpixels;
+		return ((DataBufferInt)(image).getRaster().getDataBuffer()).getData();
 	}
 	
 	public static byte encodeFlvVideoDataHeader(boolean isKeyFrame) {
 		if (isKeyFrame) return (byte) (FLV_KEYFRAME + SCREEN_VIDEO_CODEC_ID);
-		return (byte) (FLV_INTERFRAME + SCREEN_VIDEO_CODEC_ID);		
+		return (byte) (FLV_INTERFRAME + SCREEN_VIDEO_CODEC_ID);
 	}
 	
 	public static byte[] encodeBlockAndScreenDimensions(int blockWidth, int imageWidth, int blockHeight, int imageHeight) {
@@ -60,10 +58,8 @@ public final class ScreenVideoEncoder {
 	}
 	
 	public static int[] getPixels(BufferedImage image, int x, int y, int width, int height) throws PixelExtractException {
-		long start = System.currentTimeMillis();
-					
 		/* Use this!!! Fast!!! (ralam Oct. 14, 2009) */
-		int[] pixels = image.getRGB(x, y, width, height, null, 0, width);
+		return image.getRGB(x, y, width, height, null, 0, width);
 		
 		/* DO NOT user this. Slow. 10 times slower than the other one. */
 /*		
@@ -77,25 +73,18 @@ public final class ScreenVideoEncoder {
 		    throw new PixelExtractException("Aborted or error while fetching image.");
 		}
 */
-		long end = System.currentTimeMillis();
-//		System.out.println("Grabbing pixels[" + pixels.length + "] took " + (end-start) + " ms.");
-		return pixels;	
 	}
 	
 	public static byte[] encodePixels(int pixels[], int width, int height) {
-		
 		changePixelScanFromBottomLeftToTopRight(pixels, width, height);
 		
 		byte[] bgrPixels = convertFromRGBtoBGR(pixels);
-		
-		byte[] compressedPixels = compressUsingZlib(bgrPixels);  
-		
-    	byte[] encodedDataLength = ScreenVideoEncoder.encodeCompressedPixelsDataLength(compressedPixels.length);
-    	byte[] encodedData = new byte[encodedDataLength.length + compressedPixels.length];
-    	
-    	System.arraycopy(encodedDataLength, 0, encodedData, 0, encodedDataLength.length);
-    	
-    	System.arraycopy(compressedPixels, 0, encodedData, encodedDataLength.length, compressedPixels.length);
+		byte[] compressedPixels = compressUsingZlib(bgrPixels, Deflater.DEFLATED);
+		byte[] encodedDataLength = ScreenVideoEncoder.encodeCompressedPixelsDataLength(compressedPixels.length);
+		byte[] encodedData = new byte[encodedDataLength.length + compressedPixels.length];
+
+		System.arraycopy(encodedDataLength, 0, encodedData, 0, encodedDataLength.length);
+		System.arraycopy(compressedPixels, 0, encodedData, encodedDataLength.length, compressedPixels.length);
 
 		return encodedData;
 	}
@@ -135,26 +124,23 @@ public final class ScreenVideoEncoder {
 	
 	
 	/**
-	 * Compress the byte array using Zlib.
+	 * Compress the byte array using Zlib. 
 	 * @param pixels
+	 * @param compressionLevel one of Deflater compression levels. 
+	 * Passed as a parameter instead of object variable so we can adjust it dynamically later on
 	 * @return a byte array of compressed data
 	 */
-	private static byte[] compressUsingZlib(byte[] pixels) {
-		long start = System.currentTimeMillis();
-	    // Create the compressed stream
-		 byte[] output = new byte[pixels.length];
-		 Deflater compresser = new Deflater(Deflater.BEST_COMPRESSION);
-		 compresser.setInput(pixels);
-		 compresser.finish();
-		 int compressedDataLength = compresser.deflate(output);
-
-		 byte[] zData = new byte[compressedDataLength] ;
-		 System.arraycopy(output, 0, zData, 0, compressedDataLength);
-
-		long end = System.currentTimeMillis();
-//		System.out.println("Compressing pixels[" + pixels.length + "] took " + (end-start) + " ms.");
-
-		// set the byte array to the newly compressed data
+	private static byte[] compressUsingZlib(byte[] pixels, int compressionLevel) {
+		// Create the compressed stream
+		byte[] output = new byte[pixels.length];
+		Deflater compressor = new Deflater(compressionLevel);
+		compressor.setInput(pixels);
+		compressor.finish();
+		int compressedDataLength = compressor.deflate(output);
+		// this truncates output down to its actual size by copying
+		// it was declared w/ uncompressed length, and filled w/ compressed data
+		byte[] zData = new byte[compressedDataLength] ;
+		System.arraycopy(output, 0, zData, 0, compressedDataLength);
 		return zData;
 	}
 	
@@ -178,13 +164,13 @@ public final class ScreenVideoEncoder {
 			rgbPixels[position++] = green;
 			rgbPixels[position++] = red;
 /*
- * If we want to send grayscale images.			
+ * If we want to send grayscale images.
 			byte brightness = convertToGrayScale(red, green, blue);
 			
 			// Sequence should be BGR
 			rgbPixels[position++] = brightness;
 			rgbPixels[position++] = brightness;
-			rgbPixels[position++] = brightness;				
+			rgbPixels[position++] = brightness;
 */		}
 		
 		long end = System.currentTimeMillis();
@@ -204,11 +190,10 @@ public final class ScreenVideoEncoder {
 	    {
 	        buf.append( ( value & displayMask ) == 0 ? '0' : '1' );
 	        value <<= 1;
-			       
-	        if ( c % 8 == 0 )
-		        buf.append( ' ' );
-		    }
-			   
+
+		if ( c % 8 == 0 )
+			buf.append( ' ' );
+	    }
 	    return buf.toString();
 	}
 		    
