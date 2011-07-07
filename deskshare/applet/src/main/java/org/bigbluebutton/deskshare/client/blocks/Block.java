@@ -108,17 +108,17 @@ public final class Block {
     private byte[] convertIntPixelsToBytePixels(int[] pixels) {
     	byte[] p = new byte[pixels.length * 3];
     	int position = 0;
-		
-		for (int i = 0; i < pixels.length; i++) {
-			byte red = (byte) ((pixels[i] >> 16) & 0xff);
-			byte green = (byte) ((pixels[i] >> 8) & 0xff);
-			byte blue = (byte) (pixels[i] & 0xff);
 
-			// Sequence should be BGR
-			p[position++] = blue;
-			p[position++] = green;
-			p[position++] = red;
-		}
+	    for (int pixel : pixels) {
+		    byte red = (byte) ((pixel >> 16) & 0xff);
+		    byte green = (byte) ((pixel >> 8) & 0xff);
+		    byte blue = (byte) (pixel & 0xff);
+
+		    // Sequence should be BGR
+		    p[position++] = blue;
+		    p[position++] = green;
+		    p[position++] = red;
+	    }
 		
 		return p;
     }
