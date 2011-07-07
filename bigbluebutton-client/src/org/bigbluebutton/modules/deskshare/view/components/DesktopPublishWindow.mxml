@@ -216,7 +216,7 @@
 				ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
 				ns.addEventListener( NetStatusEvent.NET_STATUS, onNetStatus );
 				ns.client = this;
-				ns.bufferTime = 0;
+				ns.bufferTime = 0.5;
 				ns.receiveVideo(true);
 				ns.receiveAudio(false);
 				video.attachNetStream(ns);
