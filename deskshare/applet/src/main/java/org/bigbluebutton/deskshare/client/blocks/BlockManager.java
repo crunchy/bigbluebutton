@@ -21,20 +21,20 @@
 */
 package org.bigbluebutton.deskshare.client.blocks;
 
+import org.bigbluebutton.deskshare.client.net.BlockMessage;
+import org.bigbluebutton.deskshare.common.Dimension;
+
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import org.bigbluebutton.deskshare.client.net.BlockMessage;
-import org.bigbluebutton.deskshare.common.Dimension;
-
 public class BlockManager {
     private final Map<Integer, Block> blocksMap;
     private int numColumns;
     private int numRows;
-    
-    private ChangedBlocksListener listeners;
+
+	private ChangedBlocksListener listeners;
     private Dimension screenDim, blockDim;
     
     public BlockManager() {
@@ -44,8 +44,7 @@ public class BlockManager {
     public void initialize(Dimension screen, Dimension tile) {
     	screenDim = screen;
     	blockDim = tile;
-    	
-    	factory = new BlockFactory(screen, tile);
+
 	BlockFactory factory = new BlockFactory(screen, tile);
         
         numColumns = factory.getColumnCount();
@@ -54,7 +53,7 @@ public class BlockManager {
         
         for (int position = 1; position <= numberOfBlocks; position++) {
         	Block block = factory.createBlock(position);
-        	blocksMap.put(new Integer(position), block);
+        	blocksMap.put(position, block);
         }  
     }
     
@@ -81,9 +80,9 @@ public class BlockManager {
 		
 		int numberOfBlocks = numColumns * numRows;
 		for (int position = 1; position <= numberOfBlocks; position++) {
-			Block block = blocksMap.get(new Integer(position));
+			Block block = blocksMap.get(position);
         	if (block.hasChanged(capturedScreen)) {
-        		changedBlocks.add(new Integer(position));        		
+        		changedBlocks.add(position);
         	}
         	
     		if ((position % numColumns == 0) && (changedBlocks.size() > 0)) {
@@ -110,12 +109,12 @@ public class BlockManager {
 	}
     
 	public void blockSent(int position) {
-		Block block = (Block) blocksMap.get(new Integer(position));
+		Block block = (Block) blocksMap.get(position);
 		block.sent();
 	}
 	
 	public Block getBlock(int position) {
-		return (Block) blocksMap.get(new Integer(position));
+		return (Block) blocksMap.get(position);
 	}
 	
     public int getRowCount() {
