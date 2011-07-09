@@ -91,6 +91,7 @@ public class DeskshareClient {
 	private boolean enableTrayActions = false;
 	private boolean fullScreen = false;
 	private boolean preview = false;
+	public static final int MAX_WIDTH = 1280;
 
 	public NewBuilder host(String host) {
 	    this.host = host;
@@ -208,7 +209,7 @@ public class DeskshareClient {
 		y = ((int) fullScreenSize.getHeight() - captureHeight) / 2;
 		System.out.println("Info[" + captureWidth + "," + captureHeight + "][" + x + "," + y + "]"
 		    + "[" + fullScreenSize.getWidth() + "," + fullScreenSize.getHeight() + "]");
-//    			calculateDimensionsToMaintainAspectRatio();
+    			calculateDimensionsToMaintainAspectRatio();
 	    }
 	}
 
@@ -235,8 +236,8 @@ public class DeskshareClient {
 	    System.out.println("Check for scaling[" + captureWidth + "," + captureHeight + "][" + scaleWidth + "," + scaleHeight + "]");
 
 //	    TODO make configurable
-	    if (scaleWidth > 1280) {
-		scaleWidth = 1280;
+	    if (scaleWidth > MAX_WIDTH) {
+		scaleWidth = MAX_WIDTH;
 		double ratio = (double) captureHeight / (double) captureWidth;
 		scaleHeight = (int) ((double) scaleWidth * ratio);
 		System.out.println("Scaling[" + captureWidth + "," + captureHeight + "][" + scaleWidth + "," + scaleHeight + "]");
