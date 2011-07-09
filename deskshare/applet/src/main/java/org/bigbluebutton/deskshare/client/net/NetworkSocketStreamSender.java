@@ -139,16 +139,18 @@ public class NetworkSocketStreamSender implements Runnable {
 			Integer[] changedBlocks = ((BlockMessage)message).getBlocks();
 
 			BlockStreamProtocolEncoder.numBlocksChanged(changedBlocks.length, dataToSend);
-//			System.out.println("Number of blocks changed: " + changedBlocks.length);
-			String blocksStr = "Encoding ";
+			System.out.println("Number of blocks changed: " + changedBlocks.length);
+			//String blocksStr = "Encoding ";
 			for (int i = 0; i < changedBlocks.length; i++) {
-				blocksStr += " " + (Integer)changedBlocks[i];
+				//blocksStr += " " + (Integer)changedBlocks[i];
 				EncodedBlockData block = retriever.getBlockToSend((Integer)changedBlocks[i]);
-				BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);	
+                                // 4th argument true = keyframe
+				//BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);
+                                BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), ((BlockMessage)message).getForceKeyFrame());
 				BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
 			}
 			
-//			System.out.println(blocksStr);
+			//System.out.println(blocksStr);
 			
 			sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
 			sendToStream(dataToSend);

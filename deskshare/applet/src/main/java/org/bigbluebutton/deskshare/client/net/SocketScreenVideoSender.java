@@ -117,7 +117,7 @@ public class SocketScreenVideoSender implements ScreenCaptureSender {
 	}
 	
 	public void send(ByteArrayOutputStream videoData, boolean isKeyFrame) throws ConnectionException {
-
+                // this class doesn't appear to be used anywhere
 		ScreenVideo sv = new ScreenVideo(videoData, isKeyFrame);
 		try {
 			screenQ.put(sv);

@@ -24,9 +24,15 @@ package org.bigbluebutton.deskshare.client.net;
 public class BlockMessage implements Message {
 
 	private Integer[] blocks;
+        private boolean forceKeyFrame;
 	
 	public BlockMessage(Integer[] blocks) {
 		this.blocks = blocks;
+	}
+
+	public BlockMessage(Integer[] blocks, boolean fkf) {
+		this.blocks = blocks;
+                this.forceKeyFrame = fkf;
 	}
 	
 	@Override
@@ -37,4 +43,8 @@ public class BlockMessage implements Message {
 	public Integer[] getBlocks() {
 		return blocks;
 	}
+        
+        public boolean getForceKeyFrame() {
+            return forceKeyFrame;
+        }
 }

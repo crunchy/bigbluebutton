@@ -31,122 +31,141 @@ import java.util.Map;
 import java.util.Vector;
 
 public class BlockManager {
-	private final Map<Integer, Block> blocksMap;
-	private int numColumns;
-	private int numRows;
+    private final Map<Integer, Block> blocksMap;
+    private int numColumns;
+    private int numRows;
+    // if changed blocks / total blocks > this, trigger keyframe
+    private float changedPctToTriggerKeyframe = .4f;
 
-	private ChangedBlocksListener listeners;
-	private Dimension screenDim, blockDim;
+    private ChangedBlocksListener listeners;
+    private Dimension screenDim, blockDim;
 
-	public BlockManager() {
-		blocksMap = new HashMap<Integer, Block>();
-	}
+    public BlockManager() {
+        blocksMap = new HashMap<Integer, Block>();
+    }
 
-	public void initialize(Dimension screen, Dimension tile) {
-		screenDim = screen;
-		blockDim = tile;
+    public void initialize(Dimension screen, Dimension tile) {
+        screenDim = screen;
+        blockDim = tile;
 
-		BlockFactory factory = new BlockFactory(screen, tile);
+        BlockFactory factory = new BlockFactory(screen, tile);
 
-		numColumns = factory.getColumnCount();
-		numRows = factory.getRowCount();
-		int numberOfBlocks = numColumns * numRows;
+        numColumns = factory.getColumnCount();
+        numRows = factory.getRowCount();
 
-		for (int position = 1; position <= numberOfBlocks; position++) {
-			Block block = factory.createBlock(position);
-			blocksMap.put(position, block);
-		}
-	}
+        for (int position = 1; position <= getBlockCount(); position++) {
+            Block block = factory.createBlock(position);
+            blocksMap.put(position, block);
+        }
+    }
 
-	public void processCapturedScreen(BufferedImage capturedScreen) {
-		Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
+    public void processCapturedScreen(BufferedImage capturedScreen) {
+        Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
 
-		int changedCount = changedBlocks.size();
+        int changedCount = changedBlocks.size();
 
-		System.out.println("Changed Blocks: " + changedCount);
+        System.out.println("Changed Blocks: " + changedCount);
 
-		if (changedCount > 0) {
-			partitionBlockMessages(changedBlocks, numColumns);
-		}
-	}
+        if (changedCount > 0) {
+            partitionBlockMessages(changedBlocks, numColumns);
+        }
+    }
 
-	private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen) {
-		Vector<Integer> changedBlocks = new Vector<Integer>();
+    private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen) {
+        Vector<Integer> changedBlocks = new Vector<Integer>();
+    
+        for (int position = 1; position <= getBlockCount(); position++) {
+            Block block = blocksMap.get(position);
+            if (block.hasChanged(capturedScreen)) {
+                changedBlocks.add(position);
+            }
+        }
+        return changedBlocks;
+    }
+
+    private void partitionBlockMessages(Vector<Integer> changedBlocks, int blocksPerSection) {
+        int changedCount = changedBlocks.size();
+
+        List<Integer> section;
+        Integer[] bc;
+
+        System.out.println("Total Changed Blocks: " + changedCount);
+        // force a keyframe if more than some % of blocks have changed to minimize tiling
+        int numberOfBlocks = getBlockCount();
+        boolean forceKeyFrame = false;
+        if (numberOfBlocks > 0) {
+            float pctChanged = (float)changedCount / numberOfBlocks;
+            if (pctChanged > changedPctToTriggerKeyframe) {
+                forceKeyFrame = true;
+                System.out.println(100 * pctChanged + "% blocks changed");
+            }
+        }
+
+        for (int start = 0; start <= changedCount; start += blocksPerSection) {
+            int offset = start + blocksPerSection;
+
+            if (offset > changedCount) { 
+                offset = changedCount; 
+            }
+
+            section = changedBlocks.subList(start, offset);
+
+            bc = new Integer[section.size()];
+            section.toArray(bc);
+
+            System.out.println("Notifying Changed Blocks: " + section.size());
+
+            notifyChangedBlockListener(new BlockMessage(bc, forceKeyFrame));
+        }
+    }
+
+    private void notifyChangedBlockListener(BlockMessage position) {
+        listeners.onChangedBlock(position);
+    }
 
 
-		int numberOfBlocks = numColumns * numRows;
+    public void addListener(ChangedBlocksListener listener) {
+        listeners = listener;
+    }
 
-		for (int position = 1; position <= numberOfBlocks; position++) {
-			Block block = blocksMap.get(position);
+    public void removeListener(ChangedBlocksListener listener) {
+    listeners = null;
+    }
 
-			if (block.hasChanged(capturedScreen)) {
-				changedBlocks.add(position);
-			}
-		}
-		return changedBlocks;
-	}
+    public void blockSent(int position) {
+        Block block = blocksMap.get(position);
+        block.sent();
+    }
 
-	private void partitionBlockMessages(Vector<Integer> changedBlocks,
-	                                    int blocksPerSection) {
-		int changedCount = changedBlocks.size();
+    public Block getBlock(int position) {
+        return blocksMap.get(position);
+    }
 
-		List<Integer> section;
-		Integer[] bc;
+    public int getRowCount() {
+        return numRows;
+    }
 
-		System.out.println("Total Changed Blocks: " + changedCount);
+    public int getColumnCount() {
+        return numColumns;
+    }
 
-		for (int start = 0; start <= changedCount; start += blocksPerSection) {
-			int offset = start + blocksPerSection;
+    public int getBlockCount() {
+        return numColumns * numRows;
+    }
 
-			if (offset > changedCount) { offset = changedCount; }
+    public Dimension getScreenDim() {
+        return screenDim;
+    }
 
-			section = changedBlocks.subList(start, offset);
-
-			bc = new Integer[section.size()];
-			section.toArray(bc);
-
-			System.out.println("Notifying Changed Blocks: " +
-				section.size());
-
-			notifyChangedBlockListener(new BlockMessage(bc));
-		}
-	}
-
-	private void notifyChangedBlockListener(BlockMessage position) {
-		listeners.onChangedBlock(position);
-	}
-
-
-	public void addListener(ChangedBlocksListener listener) {
-		listeners = listener;
-	}
-
-	public void removeListener(ChangedBlocksListener listener) {
-		listeners = null;
-	}
-
-	public void blockSent(int position) {
-		Block block = blocksMap.get(position);
-		block.sent();
-	}
-
-	public Block getBlock(int position) {
-		return blocksMap.get(position);
-	}
-
-	public int getRowCount() {
-		return numRows;
-	}
-
-	public int getColumnCount() {
-		return numColumns;
-	}
-
-	public Dimension getScreenDim() {
-		return screenDim;
-	}
-
-	public Dimension getBlockDim() {
-		return blockDim;
-	}
+    public Dimension getBlockDim() {
+        return blockDim;
+    }
+    
+    public float getKeyframeThreshold() {
+        return changedPctToTriggerKeyframe;
+    }
+    
+    public void setKeyframeThreshold(float t) {
+        changedPctToTriggerKeyframe = t;
+    }
 }

@@ -48,20 +48,22 @@ public class DeskShareApplet extends JApplet implements ClientListener {
     public boolean isSharing = false;
     
     @Override
-	public void init() {		
-    	System.out.println("Desktop Sharing Applet Initializing");
-		hostValue = getParameter("IP");
-		String port = getParameter("PORT");
-		if (port != null) portValue = Integer.parseInt(port);
-		roomValue = getParameter("ROOM");
+    public void init() {
+        System.out.println("Desktop Sharing Applet Initializing");
+        hostValue = getParameter("IP");
+        String port = getParameter("PORT");
+        if (port != null) {
+            portValue = Integer.parseInt(port);
+        }
+        roomValue = getParameter("ROOM");
 
-		String captureFullScreen = getParameter("FULL_SCREEN");
-		if (captureFullScreen != null) fullScreenValue = Boolean.parseBoolean(captureFullScreen);
+        String captureFullScreen = getParameter("FULL_SCREEN");
+        if (captureFullScreen != null) fullScreenValue = Boolean.parseBoolean(captureFullScreen);
 
-		String tunnel = getParameter("HTTP_TUNNEL");
-		if (tunnel != null) tunnelValue = Boolean.parseBoolean(tunnel);
-		icon = getImage(getCodeBase(), "bbb.gif");
-	}
+        String tunnel = getParameter("HTTP_TUNNEL");
+        if (tunnel != null) tunnelValue = Boolean.parseBoolean(tunnel);
+        icon = getImage(getCodeBase(), "bbb.gif");
+    }
 		
 	@Override
 	public void start() {		 	
