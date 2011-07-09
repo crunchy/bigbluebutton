@@ -7,32 +7,26 @@ import java.awt.image.BufferedImage;
 public class ScreenPreview extends JFrame implements ScreenCaptureListener {
 
     JLabel label;
-    Rectangle screenRect;
 
-    int scaleX, scaleY;
+    public ScreenPreview(int width, int height) {
+	super("ScreenPreview");
 
-    public ScreenPreview() {
-        super("ScreenPreview");
+	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+	Dimension size = new Dimension(width, height);
 
-        screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize().width,
-                                   Toolkit.getDefaultToolkit().getScreenSize().height);
+	label = new JLabel();
 
-        scaleX = Toolkit.getDefaultToolkit().getScreenSize().width;
-        scaleY = Toolkit.getDefaultToolkit().getScreenSize().height;
+	label.setPreferredSize(size);
+	getContentPane().add(label);
 
-        label = new JLabel();
-        label.setPreferredSize(new Dimension(scaleX, scaleY));
-        getContentPane().add( label );
-
-        pack();
-        setVisible(true);
+	pack();
+	setVisible(true);
     }
 
     @Override
     public void onScreenCaptured(BufferedImage screen) {
-      label.setIcon(new ImageIcon(screen));
-      label.update(label.getGraphics());
+	label.setIcon(new ImageIcon(screen));
+	label.update(label.getGraphics());
     }
 }
