@@ -23,7 +23,6 @@ package org.bigbluebutton.deskshare.client.blocks;
 
 import org.bigbluebutton.deskshare.client.net.EncodedBlockData;
 import org.bigbluebutton.deskshare.common.Dimension;
-import org.bigbluebutton.deskshare.common.PixelExtractException;
 import org.bigbluebutton.deskshare.common.ScreenVideoEncoder;
 
 import java.awt.*;
@@ -49,11 +48,8 @@ public final class Block {
 
     public boolean hasChanged(BufferedImage capturedScreen) {
 	synchronized (pixelsLock) {
-	    try {
-		capturedPixels = ScreenVideoEncoder.getPixels(capturedScreen, getX(), getY(), getWidth(), getHeight());
-	    } catch (PixelExtractException e) {
-		System.out.println(e.toString());
-	    }
+	    int width = getWidth();
+	    capturedPixels = capturedScreen.getRGB(getX(), getY(), width, getHeight(), null, 0, width);
 
 	    if (!dirtyBlock.get() && (isChecksumDifferent(capturedPixels) || sendKeepAliveBlock())) {
 		dirtyBlock.set(true);

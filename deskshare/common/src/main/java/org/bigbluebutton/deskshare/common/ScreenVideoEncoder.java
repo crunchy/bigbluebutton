@@ -56,26 +56,8 @@ public final class ScreenVideoEncoder {
 		
 		return dims;
 	}
-	
-	public static int[] getPixels(BufferedImage image, int x, int y, int width, int height) throws PixelExtractException {
-		/* Use this!!! Fast!!! (ralam Oct. 14, 2009) */
-		return image.getRGB(x, y, width, height, null, 0, width);
-		
-		/* DO NOT user this. Slow. 10 times slower than the other one. */
-/*		
-		PixelGrabber pg = new PixelGrabber(image, x, y, width, height, pixels, 0, width);
-		try {
-		    pg.grabPixels();
-		} catch (InterruptedException e) {
-		    throw new PixelExtractException("Interrupted waiting for pixels!");
-		}
-		if ((pg.getStatus() & ImageObserver.ABORT) != 0) {
-		    throw new PixelExtractException("Aborted or error while fetching image.");
-		}
-*/
-	}
-	
-	public static byte[] encodePixels(int pixels[], int width, int height) {
+
+    public static byte[] encodePixels(int pixels[], int width, int height) {
 		changePixelScanFromBottomLeftToTopRight(pixels, width, height);
 		
 		byte[] bgrPixels = convertFromRGBtoBGR(pixels);
