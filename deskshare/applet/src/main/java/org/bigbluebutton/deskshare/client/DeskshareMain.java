@@ -24,11 +24,8 @@ package org.bigbluebutton.deskshare.client;
 import jargs.gnu.CmdLineParser;
 import jargs.gnu.CmdLineParser.Option;
 
-import java.awt.Dimension;
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -48,9 +45,9 @@ public class DeskshareMain implements ClientListener, LifeLineListener {
 	
 	private void printUsage() {
         System.err.println("usage: deskshare [options]");
-        for (Iterator<String> i = optionHelpStrings.iterator(); i.hasNext(); ) {
-        	System.err.println(i.next());
-        }
+	    for (String optionHelpString : optionHelpStrings) {
+		System.err.println(optionHelpString);
+	    }
     }
 	
 	public static void main(String[] args) {

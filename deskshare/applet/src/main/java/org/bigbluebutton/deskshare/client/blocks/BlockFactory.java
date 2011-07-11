@@ -21,9 +21,9 @@
 */
 package org.bigbluebutton.deskshare.client.blocks;
 
-import java.awt.Point;
-
 import org.bigbluebutton.deskshare.common.Dimension;
+
+import java.awt.*;
 
 class BlockFactory {
     private int numColumns;

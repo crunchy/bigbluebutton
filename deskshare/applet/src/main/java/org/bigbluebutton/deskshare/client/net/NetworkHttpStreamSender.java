@@ -19,19 +19,17 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
-import java.awt.Point;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-
+import com.myjavatools.web.ClientHttpRequest;
 import org.bigbluebutton.deskshare.client.ExitCode;
 import org.bigbluebutton.deskshare.common.CaptureEvents;
 import org.bigbluebutton.deskshare.common.Dimension;
 
-import com.myjavatools.web.ClientHttpRequest;
+import java.awt.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 
 public class NetworkHttpStreamSender implements Runnable {	
 	private static final String SEQ_NUM = "sequenceNumber";
@@ -167,14 +165,14 @@ public class NetworkHttpStreamSender implements Runnable {
 	private void processNextMessageToSend(Message message) {
 		if (message.getMessageType() == Message.MessageType.BLOCK) {		
 			Integer[] changedBlocks = ((BlockMessage)message).getBlocks();
-			for (int i = 0; i < changedBlocks.length; i++) {
-				EncodedBlockData block = retriever.getBlockToSend((Integer)changedBlocks[i]);
-				BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);	
-				sendBlockData(bv);
-			}
-			for (int i = 0; i< changedBlocks.length; i++) {
-				retriever.blockSent((Integer)changedBlocks[i]);
-			}
+		    for (Integer changedBlock : changedBlocks) {
+			EncodedBlockData block = retriever.getBlockToSend((Integer) changedBlock);
+			BlockVideoData bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);
+			sendBlockData(bv);
+		    }
+		    for (Integer changedBlock : changedBlocks) {
+			retriever.blockSent((Integer) changedBlock);
+		    }
 		} else if (message.getMessageType() == Message.MessageType.CURSOR) {
 			CursorMessage msg = (CursorMessage)message;
 			sendCursor(msg.getMouseLocation(), msg.getRoom());

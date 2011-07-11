@@ -141,22 +141,22 @@ public class NetworkSocketStreamSender implements Runnable {
 			BlockStreamProtocolEncoder.numBlocksChanged(changedBlocks.length, dataToSend);
 			System.out.println("Number of blocks changed: " + changedBlocks.length);
 			//String blocksStr = "Encoding ";
-			for (int i = 0; i < changedBlocks.length; i++) {
-				//blocksStr += " " + (Integer)changedBlocks[i];
-				EncodedBlockData block = retriever.getBlockToSend((Integer)changedBlocks[i]);
-                                // 4th argument true = keyframe
-				//BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);
-                                BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), ((BlockMessage)message).getForceKeyFrame());
-				BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
-			}
+		    for (Integer changedBlock : changedBlocks) {
+			//blocksStr += " " + (Integer)changedBlocks[i];
+			EncodedBlockData block = retriever.getBlockToSend((Integer) changedBlock);
+			// 4th argument true = keyframe
+			//BlockVideoData	bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), false /* should remove later */);
+			BlockVideoData bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), ((BlockMessage) message).getForceKeyFrame());
+			BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
+		    }
 			
 			//System.out.println(blocksStr);
 			
 			sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
 			sendToStream(dataToSend);
-			for (int i = 0; i< changedBlocks.length; i++) {
-				retriever.blockSent((Integer)changedBlocks[i]);
-			}
+		    for (Integer changedBlock : changedBlocks) {
+			retriever.blockSent((Integer) changedBlock);
+		    }
 		} else if (message.getMessageType() == Message.MessageType.CURSOR) {
 			CursorMessage msg = (CursorMessage)message;
 			sendCursor(msg.getMouseLocation(), msg.getRoom());
