@@ -25,45 +25,45 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MyDeskShareMain implements ClientListener {
-	private final BlockingQueue<ExitCode> exitReasonQ = new LinkedBlockingQueue<ExitCode>(5);
+    private final BlockingQueue<ExitCode> exitReasonQ = new LinkedBlockingQueue<ExitCode>(5);
 
-	private static DeskshareClient client;
-	private static final int DESKSHARE_PORT = 9123;
+    private static DeskshareClient client;
+    private static final int DESKSHARE_PORT = 9123;
 
-	public static void main(String[] args) {
-		MyDeskShareMain dsMain = new MyDeskShareMain();
+    public static void main(String[] args) {
+	MyDeskShareMain dsMain = new MyDeskShareMain();
 
-		String hostValue = "bbb-staging.crunchconnect.com";
-		String roomId = "mr-4134";
-	    	int listenPortValue = DESKSHARE_PORT;
+	String hostValue = "bbb-staging.crunchconnect.com";
+	String roomId = "mr-4134";
+	int listenPortValue = DESKSHARE_PORT;
 
 //		cli: host room port (all optional)
-		switch (args.length) {
-			case 3:
-				int port = 0;
-				try {
-					port = Integer.parseInt(args[2]);
-				} catch (NumberFormatException e) {
-					System.err.println("Port must be integer");
-				}
-				if (port > 0) {
-					listenPortValue = (Integer) port;
-				}
-//				falling through to next case on purpose
-			case 2:
-				roomId = args[1];
-				// falling through to next case on purpose
-			case 1:
-				hostValue = args[0];
-			default:
+	switch (args.length) {
+	    case 3:
+		int port = 0;
+		try {
+		    port = Integer.parseInt(args[2]);
+		} catch (NumberFormatException e) {
+		    System.err.println("Port must be integer");
 		}
+		if (port > 0) {
+		    listenPortValue = (Integer) port;
+		}
+//				falling through to next case on purpose
+	    case 2:
+		roomId = args[1];
+		// falling through to next case on purpose
+	    case 1:
+		hostValue = args[0];
+	    default:
+	}
 
-		client = new DeskshareClient.NewBuilder()
-			.host(hostValue)
-			.port(listenPortValue)
-			.room(roomId)
-			.fullScreen(true)
-			.quality(true)
+	client = new DeskshareClient.NewBuilder()
+	    .host(hostValue)
+	    .port(listenPortValue)
+	    .room(roomId)
+	    .fullScreen(true)
+	    .quality(true)
 //			.captureWidth(800)
 //			.captureHeight(600)
 //			.scaleWidth(800)
@@ -71,37 +71,37 @@ public class MyDeskShareMain implements ClientListener {
 //			.aspectRatio(false)
 //			.x(0)
 //			.y(0)
-			.build();
+	    .build();
 
-		client.addClientListener(dsMain);
-		client.start();
+	client.addClientListener(dsMain);
+	client.start();
 
-		try {
-			System.out.println("Waiting for trigger to stop client.");
-			ExitCode reason = dsMain.exitReasonQ.take();
-			System.out.println("Stopping client.");
-			client.stop();
+	try {
+	    System.out.println("Waiting for trigger to stop client.");
+	    ExitCode reason = dsMain.exitReasonQ.take();
+	    System.out.println("Stopping client.");
+	    client.stop();
 
-			System.exit(reason.getExitCode());
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			System.exit(500);
-		}
+	    System.exit(reason.getExitCode());
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	    System.exit(500);
 	}
+    }
 
-	public void onClientStop(ExitCode reason) {
-		queueExitCode(reason);
+    public void onClientStop(ExitCode reason) {
+	queueExitCode(reason);
+    }
+
+    private void queueExitCode(ExitCode reason) {
+	try {
+	    exitReasonQ.put(reason);
+	    System.out.println("Triggered stop client.");
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	    client.stop();
+
+	    System.exit(reason.getExitCode());
 	}
-
-	private void queueExitCode(ExitCode reason) {
-		try {
-			exitReasonQ.put(reason);
-			System.out.println("Triggered stop client.");
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			client.stop();
-
-			System.exit(reason.getExitCode());
-		}
-	}
+    }
 }
