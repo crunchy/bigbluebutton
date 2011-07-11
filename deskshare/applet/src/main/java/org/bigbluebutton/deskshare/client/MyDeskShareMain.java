@@ -21,14 +21,12 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MyDeskShareMain implements ClientListener, LifeLineListener {
+public class MyDeskShareMain implements ClientListener {
 	private final BlockingQueue<ExitCode> exitReasonQ = new LinkedBlockingQueue<ExitCode>(5);
 
-	private static LifeLine lifeline;
 	private static DeskshareClient client;
 	private static final int DESKSHARE_PORT = 9123;
 
@@ -36,11 +34,10 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 		MyDeskShareMain dsMain = new MyDeskShareMain();
 
 		String hostValue = "bbb-staging.crunchconnect.com";
-		Integer listenPortValue = 9125;
-		String iconValue = "bbb.gif";
-		String roomId = "mr-4126";
+		String roomId = "mr-4134";
+	    	int listenPortValue = DESKSHARE_PORT;
 
-		// cli: host room port (all optional)
+//		cli: host room port (all optional)
 		switch (args.length) {
 			case 3:
 				int port = 0;
@@ -52,7 +49,7 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 				if (port > 0) {
 					listenPortValue = (Integer) port;
 				}
-				// falling through to next case on purpose
+//				falling through to next case on purpose
 			case 2:
 				roomId = args[1];
 				// falling through to next case on purpose
@@ -61,27 +58,19 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 			default:
 		}
 
-		Image image = Toolkit.getDefaultToolkit().getImage(iconValue);
-
-		lifeline = new LifeLine(listenPortValue, dsMain);
-		lifeline.listen();
-
 		client = new DeskshareClient.NewBuilder()
 			.host(hostValue)
-			.port(DESKSHARE_PORT)
+			.port(listenPortValue)
 			.room(roomId)
-			.captureWidth(800)
-			.captureHeight(600)
-			.scaleWidth(800)
-			.scaleHeight(600)
-			.quality(false)
-			.aspectRatio(false)
-			.x(0)
-			.y(0)
 			.fullScreen(true)
-			.httpTunnel(false)
-			.trayIcon(image)
-			.enableTrayIconActions(false)
+			.quality(true)
+//			.captureWidth(800)
+//			.captureHeight(600)
+//			.scaleWidth(800)
+//			.scaleHeight(600)
+//			.aspectRatio(false)
+//			.x(0)
+//			.y(0)
 			.build();
 
 		client.addClientListener(dsMain);
@@ -92,10 +81,9 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 			ExitCode reason = dsMain.exitReasonQ.take();
 			System.out.println("Stopping client.");
 			client.stop();
-			lifeline.disconnect();
+
 			System.exit(reason.getExitCode());
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.exit(500);
 		}
@@ -105,21 +93,14 @@ public class MyDeskShareMain implements ClientListener, LifeLineListener {
 		queueExitCode(reason);
 	}
 
-	@Override
-	public void disconnected(ExitCode reason) {
-		queueExitCode(reason);
-	}
-
 	private void queueExitCode(ExitCode reason) {
 		try {
-//			System.out.println("Trigger stop client ." + exitReasonQ.remainingCapacity());
 			exitReasonQ.put(reason);
 			System.out.println("Triggered stop client.");
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			client.stop();
-			lifeline.disconnect();
+
 			System.exit(reason.getExitCode());
 		}
 	}
