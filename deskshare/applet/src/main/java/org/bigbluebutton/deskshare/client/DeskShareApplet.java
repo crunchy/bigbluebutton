@@ -30,16 +30,16 @@ public class DeskShareApplet extends JApplet implements ClientListener {
     private static final long serialVersionUID = 1L;
 
     String hostValue = "localhost";
-    Integer portValue = new Integer(9123);
+    Integer portValue = 9123;
     String roomValue = "85115";
-    Integer cWidthValue = new Integer(800);
-    Integer cHeightValue = new Integer(600);
-    Integer sWidthValue = new Integer(800);
-    Integer sHeightValue = new Integer(600);
+    Integer cWidthValue = 800;
+    Integer cHeightValue = 600;
+    Integer sWidthValue = 800;
+    Integer sHeightValue = 600;
     Boolean qualityValue = false;
     Boolean aspectRatioValue = false;
-    Integer xValue = new Integer(0);
-    Integer yValue = new Integer(0);
+    Integer xValue = 0;
+    Integer yValue = 0;
     Boolean tunnelValue = true;
     Boolean fullScreenValue = false;
     DeskshareClient client;
