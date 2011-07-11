@@ -39,6 +39,17 @@ class BlockChecksum {
 	    checksum.update(pixels); 
 	    return (oldsum == checksum.getValue());	
 	}
+
+    	public synchronized boolean isChecksumSame(int[] pixels) {
+	    long oldsum = checksum.getValue();
+	    checksum.reset();
+
+	    for(int pixel : pixels)  {
+		checksum.update(pixel);
+	    }
+
+	    return (oldsum == checksum.getValue());
+	}
 	
 	public synchronized void reset() {
 		checksum.reset();
