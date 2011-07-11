@@ -47,7 +47,7 @@ public class MyDeskShareMain implements ClientListener {
 		    System.err.println("Port must be integer");
 		}
 		if (port > 0) {
-		    listenPortValue = (Integer) port;
+		    listenPortValue = port;
 		}
 //				falling through to next case on purpose
 	    case 2:
