@@ -71,10 +71,8 @@ class BlockFactory {
 		int x = computeTileXLocation(col);
 		int y = computeTileYLocation(row);
 		int pos = computeTilePosition(row, col);
-		
-		Block t = new Block(new Dimension(w, h), pos, new Point(x,y));
 
-		return t;
+	return new Block(new Dimension(w, h), pos, new Point(x,y));
     }
     
     private int computeTilePosition(int row, int col) {
