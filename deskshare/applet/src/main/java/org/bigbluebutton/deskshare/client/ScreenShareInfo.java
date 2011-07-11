@@ -21,7 +21,7 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.Image;
+import java.awt.*;
 
 public class ScreenShareInfo {
     public String host;
@@ -39,5 +39,5 @@ public class ScreenShareInfo {
     public boolean fullScreen;
     public Image sysTrayIcon;
     public boolean enableTrayActions;
-    public boolean preview;
+    public Container contentPane;
 }

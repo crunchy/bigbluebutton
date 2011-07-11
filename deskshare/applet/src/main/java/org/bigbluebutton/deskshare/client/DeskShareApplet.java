@@ -74,7 +74,9 @@ public class DeskShareApplet extends JApplet implements ClientListener {
 					.captureHeight(cHeightValue).scaleWidth(sWidthValue).scaleHeight(sHeightValue)
 					.quality(qualityValue).aspectRatio(aspectRatioValue)
 					.x(xValue).y(yValue).fullScreen(fullScreenValue)
-					.httpTunnel(tunnelValue).trayIcon(icon).enableTrayIconActions(false).build();
+					.httpTunnel(tunnelValue).trayIcon(icon)
+			 		.contentPane(getContentPane())
+		    			.enableTrayIconActions(false).build();
 		client.addClientListener(this);
 		client.start();
 	}

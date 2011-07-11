@@ -54,16 +54,18 @@ public class ScreenSharerRunner {
 	ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
 
 	captureTaker = new ScreenCaptureTaker(capture);
-	if (ssi.preview) {
-		captureTaker.addListener(new ScreenPreview(ssi.scaleWidth, ssi.scaleHeight));
+	if (ssi.contentPane != null) {
+	    captureTaker.addListener(new ScreenPreview(ssi.contentPane));
 	}
 
 	SimpleFilter filter = new ScalingFilter(ssi.scaleWidth,
 	    ssi.scaleHeight, ssi.quality);
 	captureTaker.addFilter(filter);
 
-	filter = new ChangeTypeFilter(DEFAULT_TYPE) ;
-	captureTaker.addFilter(filter);
+	if (!ssi.quality) {
+		filter = new ChangeTypeFilter(DEFAULT_TYPE);
+		captureTaker.addFilter(filter);
+	}
 
 	mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
 

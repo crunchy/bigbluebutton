@@ -21,8 +21,7 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
 
 public class DeskshareClient {
     public static final String NAME = "DESKSHARECLIENT: ";
@@ -90,8 +89,8 @@ public class DeskshareClient {
 	private Image sysTrayIcon;
 	private boolean enableTrayActions = false;
 	private boolean fullScreen = false;
-	private boolean preview = false;
 	public static final int MAX_WIDTH = 1280;
+	private Container contentPane;
 
 	public NewBuilder host(String host) {
 	    this.host = host;
@@ -168,8 +167,8 @@ public class DeskshareClient {
 	    return this;
 	}
 
-	public NewBuilder preview(boolean preview) {
-	    this.preview = preview;
+	public NewBuilder contentPane(Container pane) {
+	    this.contentPane = pane;
 	    return this;
 	}
 
@@ -198,7 +197,7 @@ public class DeskshareClient {
 	    ssi.fullScreen = fullScreen;
 	    ssi.sysTrayIcon = sysTrayIcon;
 	    ssi.enableTrayActions = enableTrayActions;
-	    ssi.preview = preview;
+	    ssi.contentPane = contentPane;
 	    return new DeskshareClient(ssi);
 	}
 
