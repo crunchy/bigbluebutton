@@ -21,9 +21,9 @@
 */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.image.BufferedImage;
-
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
+
+import java.awt.image.BufferedImage;
 
 public class ScreenCaptureListenerImp implements ScreenCaptureListener {
 

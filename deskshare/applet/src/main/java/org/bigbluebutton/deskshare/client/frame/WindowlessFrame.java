@@ -21,29 +21,12 @@
 */
 package org.bigbluebutton.deskshare.client.frame;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.Window;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 class WindowlessFrame implements Serializable {
 	private static final long serialVersionUID = 1L;

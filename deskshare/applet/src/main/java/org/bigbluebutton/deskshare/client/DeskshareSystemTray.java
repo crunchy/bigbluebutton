@@ -22,7 +22,8 @@
 package org.bigbluebutton.deskshare.client;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class DeskshareSystemTray {
 	private SystemTrayListener listener;

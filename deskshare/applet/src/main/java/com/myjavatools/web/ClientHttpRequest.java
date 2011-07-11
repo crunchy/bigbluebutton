@@ -1,17 +1,13 @@
 
 package com.myjavatools.web;
 
-import java.net.URLConnection;
+import java.io.*;
 import java.net.URL;
-import java.io.IOException;
+import java.net.URLConnection;
 import java.util.HashMap;
-import java.util.Map;
-import java.io.File;
-import java.io.InputStream;
-import java.util.Random;
-import java.io.OutputStream;
-import java.io.FileInputStream;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * <p>Title: Client HTTP Request class</p>

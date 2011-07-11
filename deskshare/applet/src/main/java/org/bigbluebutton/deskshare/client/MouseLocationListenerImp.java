@@ -21,10 +21,10 @@
 */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.Point;
-
 import org.bigbluebutton.deskshare.client.net.CursorMessage;
 import org.bigbluebutton.deskshare.client.net.NetworkStreamSender;
+
+import java.awt.*;
 
 public class MouseLocationListenerImp implements MouseLocationListener {
 

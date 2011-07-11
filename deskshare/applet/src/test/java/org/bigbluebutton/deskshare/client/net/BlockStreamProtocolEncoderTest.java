@@ -19,13 +19,13 @@
  */
 package org.bigbluebutton.deskshare.client.net;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 import org.bigbluebutton.deskshare.common.Dimension;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class BlockStreamProtocolEncoderTest {
 	

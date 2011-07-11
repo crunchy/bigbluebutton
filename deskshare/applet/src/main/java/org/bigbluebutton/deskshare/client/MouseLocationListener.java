@@ -21,7 +21,7 @@
 */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.Point;
+import java.awt.*;
 
 public interface MouseLocationListener {
 

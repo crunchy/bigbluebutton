@@ -19,6 +19,10 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
+import org.bigbluebutton.deskshare.client.blocks.Block;
+import org.bigbluebutton.deskshare.client.blocks.BlockManager;
+import org.bigbluebutton.deskshare.common.Dimension;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,10 +32,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.bigbluebutton.deskshare.client.blocks.Block;
-import org.bigbluebutton.deskshare.client.blocks.BlockManager;
-import org.bigbluebutton.deskshare.common.Dimension;
 
 public class BlockStreamSender implements ScreenCaptureSender {
 	private static final int PORT = 9123;

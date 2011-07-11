@@ -19,7 +19,7 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
-import java.awt.Point;
+import java.awt.*;
 
 public class CursorMessage implements Message {
 

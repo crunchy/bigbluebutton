@@ -19,11 +19,11 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
-import java.awt.Point;
+import org.bigbluebutton.deskshare.common.Dimension;
+
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import org.bigbluebutton.deskshare.common.Dimension;
 
 public class BlockStreamProtocolEncoder {
 

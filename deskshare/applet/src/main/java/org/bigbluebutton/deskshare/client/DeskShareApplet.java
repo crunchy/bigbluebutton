@@ -21,8 +21,8 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import javax.swing.JApplet;
-import java.awt.Image;
+import javax.swing.*;
+import java.awt.*;
 
 public class DeskShareApplet extends JApplet implements ClientListener {
     public static final String NAME = "DESKSHAREAPPLET: ";

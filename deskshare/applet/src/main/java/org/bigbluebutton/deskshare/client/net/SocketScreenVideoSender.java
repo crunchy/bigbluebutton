@@ -19,6 +19,8 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
+import org.bigbluebutton.deskshare.common.CaptureEvents;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,8 +30,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.bigbluebutton.deskshare.common.CaptureEvents;
 
 public class SocketScreenVideoSender implements ScreenCaptureSender {
 	

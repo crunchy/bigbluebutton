@@ -19,16 +19,15 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
-import java.awt.Point;
+import org.bigbluebutton.deskshare.client.ExitCode;
+import org.bigbluebutton.deskshare.common.Dimension;
+
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Vector;
-
-import org.bigbluebutton.deskshare.client.ExitCode;
-import org.bigbluebutton.deskshare.common.Dimension;
 
 public class NetworkSocketStreamSender implements Runnable {
 	private Socket socket = null;

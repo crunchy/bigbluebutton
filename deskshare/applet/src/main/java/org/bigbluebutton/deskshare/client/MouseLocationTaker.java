@@ -21,10 +21,7 @@
 */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.HeadlessException;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.PointerInfo;
+import java.awt.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 

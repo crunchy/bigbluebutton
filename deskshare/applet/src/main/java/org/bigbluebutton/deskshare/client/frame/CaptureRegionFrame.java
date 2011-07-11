@@ -21,12 +21,10 @@
 */
 package org.bigbluebutton.deskshare.client.frame;
 
-import java.awt.Button;
-import java.awt.FlowLayout;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JPanel;
 
 public class CaptureRegionFrame {
 	private static final long serialVersionUID = 1L;

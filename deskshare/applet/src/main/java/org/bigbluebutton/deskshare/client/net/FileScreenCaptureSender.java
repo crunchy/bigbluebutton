@@ -19,12 +19,12 @@
 **/
 package org.bigbluebutton.deskshare.client.net;
 
+import org.bigbluebutton.deskshare.client.encoder.FlvEncodeException;
+import org.bigbluebutton.deskshare.client.encoder.ScreenVideoFlvEncoder;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import org.bigbluebutton.deskshare.client.encoder.FlvEncodeException;
-import org.bigbluebutton.deskshare.client.encoder.ScreenVideoFlvEncoder;
 
 public class FileScreenCaptureSender implements ScreenCaptureSender {
 
