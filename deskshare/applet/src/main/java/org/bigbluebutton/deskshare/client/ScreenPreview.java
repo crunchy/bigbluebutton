@@ -4,29 +4,31 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class ScreenPreview extends JFrame implements ScreenCaptureListener {
+public class ScreenPreview implements ScreenCaptureListener {
 
+    Container contentPane;
     JLabel label;
+    private ScalingFilter filter;
 
-    public ScreenPreview(int width, int height) {
-	super("ScreenPreview");
+    public ScreenPreview(Container pane) {
+	contentPane = pane;
+	setupLabel(contentPane.getSize());
+    }
 
-	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-	Dimension size = new Dimension(width, height);
-
+    private void setupLabel(Dimension size) {
 	label = new JLabel();
 
-	label.setPreferredSize(size);
-	getContentPane().add(label);
+	filter = new ScalingFilter(size.width, size.height, true);
 
-	pack();
-	setVisible(true);
+	label.setPreferredSize(size);
+	contentPane.add(label);
     }
 
     @Override
     public void onScreenCaptured(BufferedImage screen) {
-	label.setIcon(new ImageIcon(screen));
+	BufferedImage scaled = filter.filter(screen);
+
+	label.setIcon(new ImageIcon(scaled));
 	label.update(label.getGraphics());
     }
 }
