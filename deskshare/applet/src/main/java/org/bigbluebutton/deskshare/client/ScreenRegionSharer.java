@@ -25,16 +25,21 @@ import org.bigbluebutton.deskshare.client.frame.CaptureRegionFrame;
 import org.bigbluebutton.deskshare.client.frame.CaptureRegionListener;
 
 public class ScreenRegionSharer implements ScreenSharer {
-	public static final String NAME = "SCREENREGIONSHARER: ";
-	
-	private final ScreenShareInfo ssi;
-	private ScreenSharerRunner sharer;
-	private ClientListener listener;
-	private CaptureRegionFrame frame;
-	
-	public ScreenRegionSharer(ScreenShareInfo ssi) {
-		this.ssi = ssi;
-	}
+    public static final String NAME = "SCREENREGIONSHARER: ";
+    
+    private static ScreenShareInfo ssi;
+    private ScreenSharerRunner sharer;
+    private ClientListener listener;
+    private CaptureRegionFrame frame;
+    
+    public ScreenRegionSharer(ScreenShareInfo the_ssi) {
+            ssi = the_ssi;
+    }
+    
+    public ScreenRegionSharer() {
+        ssi = ScreenShareInfo.getInstance();
+        // System.out.println("SSI in ScreenRegionSharer = " + ssi.asString());
+    }
 	
 	public void start() {
 		CaptureRegionListener crl = new CaptureRegionListenerImp(this);
@@ -79,7 +84,8 @@ public class ScreenRegionSharer implements ScreenSharer {
 			ssi.captureHeight = height;
 			ssi.scaleWidth = width;
 			ssi.scaleHeight = height;
-			sharer = new ScreenSharerRunner(ssi);
+			//sharer = new ScreenSharerRunner(ssi);
+                        sharer = new ScreenSharerRunner();
 			sharer.addClientListener(listener);
 			sharer.startSharing();
 		}

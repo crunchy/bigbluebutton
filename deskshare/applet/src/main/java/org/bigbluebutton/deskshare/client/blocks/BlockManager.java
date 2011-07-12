@@ -23,6 +23,7 @@ package org.bigbluebutton.deskshare.client.blocks;
 
 import org.bigbluebutton.deskshare.client.net.BlockMessage;
 import org.bigbluebutton.deskshare.common.Dimension;
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ public class BlockManager {
     private int numColumns;
     private int numRows;
     // if changed blocks / total blocks > this, trigger keyframe
-    private float changedPctToTriggerKeyframe = .4f;
+    private float changedPctToTriggerKeyframe = ScreenShareInfo.getKeyframeTriggerThreshold();
 
     private ChangedBlocksListener listeners;
     private Dimension screenDim, blockDim;
@@ -167,5 +168,6 @@ public class BlockManager {
     
     public void setKeyframeThreshold(float t) {
         changedPctToTriggerKeyframe = t;
+        ScreenShareInfo.getInstance().setKeyframeTriggerThreshold(t);
     }
 }

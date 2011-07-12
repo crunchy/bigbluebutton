@@ -31,7 +31,19 @@ import org.bigbluebutton.deskshare.common.Dimension;
 import java.awt.image.BufferedImage;
 
 public class ScreenSharerRunner {
+    private static final String LICENSE_HEADER = "This program is free software: you can redistribute it and/or modify\n" +
+        "it under the terms of the GNU Lesser General Public License as published by\n" +
+        "the Free Software Foundation, either version 3 of the License, or\n" +
+        "(at your option) any later version.\n\n" +
+        "This program is distributed in the hope that it will be useful,\n" +
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
+        "GNU General Public License for more details.\n\n" +
+        "You should have received a copy of the GNU Lesser General Public License\n" +
+        "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n" +
+        "Copyright 2010 BigBlueButton. All Rights Reserved.\n\n";
     public static final String NAME = "SCREENSHARERUNNER: ";
+
     private static final int DEFAULT_TYPE = BufferedImage.TYPE_USHORT_555_RGB;
 
     private ScreenCaptureTaker captureTaker;
@@ -42,131 +54,118 @@ public class ScreenSharerRunner {
     private boolean started = false;
     private NetworkStreamSender sender;
 
-    private final ScreenShareInfo ssi;
+    private static ScreenShareInfo ssi;
 
     private DeskshareSystemTray tray = new DeskshareSystemTray();
     private ClientListener listener;
     private MouseLocationTaker mouseLocTaker;
 
-    public ScreenSharerRunner(ScreenShareInfo ssi) {
-	this.ssi = ssi;
+    public ScreenSharerRunner() {
+        ssi = ScreenShareInfo.getInstance();
+        ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
 
-	ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
+        captureTaker = new ScreenCaptureTaker(capture);
+        if (ssi.contentPane != null) {
+            captureTaker.addListener(new ScreenPreview(ssi.contentPane));
+        }
+        
+        SimpleFilter filter = new ScalingFilter(ssi.scaleWidth,
+            ssi.scaleHeight, ssi.quality);
+        captureTaker.addFilter(filter);
 
-	captureTaker = new ScreenCaptureTaker(capture);
-	if (ssi.contentPane != null) {
-	    captureTaker.addListener(new ScreenPreview(ssi.contentPane));
-	}
+        if (!ssi.quality) {
+            filter = new ChangeTypeFilter(ssi.getColorDepth());
+            captureTaker.addFilter(filter);
+        }
 
-	SimpleFilter filter = new ScalingFilter(ssi.scaleWidth,
-	    ssi.scaleHeight, ssi.quality);
-	captureTaker.addFilter(filter);
+        mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
 
-	if (!ssi.quality) {
-		filter = new ChangeTypeFilter(DEFAULT_TYPE);
-		captureTaker.addFilter(filter);
-	}
+        // Use the scaleWidth and scaleHeight as the dimension we pass to the BlockManager.
+        // If there is no scaling required, the scaleWidth and scaleHeight will be the same as
+        // captureWidth and captureHeight (ritzalam 05/27/2010)
+        Dimension screenDim = new Dimension(ssi.scaleWidth, ssi.scaleHeight);
+        Dimension tileDim = new Dimension(blockWidth, blockHeight);
+        blockManager = new BlockManager();
+        blockManager.initialize(screenDim, tileDim);
 
-	mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
-
-	// Use the scaleWidth and scaleHeight as the dimension we pass to the BlockManager.
-	// If there is no scaling required, the scaleWidth and scaleHeight will be the same as
-	// captureWidth and captureHeight (ritzalam 05/27/2010)
-	Dimension screenDim = new Dimension(ssi.scaleWidth, ssi.scaleHeight);
-	Dimension tileDim = new Dimension(blockWidth, blockHeight);
-	blockManager = new BlockManager();
-	blockManager.initialize(screenDim, tileDim);
-
-	sender = new NetworkStreamSender(blockManager, ssi.host, ssi.port, ssi.room, screenDim, tileDim, ssi.httpTunnel);
+        sender = new NetworkStreamSender(blockManager, ssi.host, ssi.port, ssi.room, screenDim, tileDim, ssi.httpTunnel);
     }
 
     public void startSharing() {
-	printHeader();
+        printHeader();
 
-	connected = sender.connect();
-	if (connected) {
-	    ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
-	    blockManager.addListener(changedBlocksListener);
+        connected = sender.connect();
+        if (connected) {
+            ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
+            blockManager.addListener(changedBlocksListener);
 
-	    ScreenCaptureListener screenCapListener = new ScreenCaptureListenerImp(blockManager);
-	    captureTaker.addListener(screenCapListener);
-	    captureTaker.start();
+            ScreenCaptureListener screenCapListener = new ScreenCaptureListenerImp(blockManager);
+            captureTaker.addListener(screenCapListener);
+            captureTaker.start();
 
-	    sender.start();
+            sender.start();
 
-	    MouseLocationListenerImp mouseLocListener = new MouseLocationListenerImp(sender, ssi.room);
-	    mouseLocTaker.addListener(mouseLocListener);
-	    mouseLocTaker.start();
+            MouseLocationListenerImp mouseLocListener = new MouseLocationListenerImp(sender, ssi.room);
+            mouseLocTaker.addListener(mouseLocListener);
+            mouseLocTaker.start();
 
-	    started = true;
-	} else {
-	    notifyListener(ExitCode.DESKSHARE_SERVICE_UNAVAILABLE);
-	}
+            started = true;
+        } else {
+            notifyListener(ExitCode.DESKSHARE_SERVICE_UNAVAILABLE);
+        }
     }
 
     public void stopSharing() {
-	System.out.println(NAME + "Stopping");
-	System.out.println(NAME + "Removing icon from system tray.");
-	tray.removeIconFromSystemTray();
-	captureTaker.stop();
-	mouseLocTaker.stop();
-	if (connected && started) {
-	    try {
-		sender.stop();
-		started = false;
-		connected = false;
-	    } catch (ConnectionException e) {
-		e.printStackTrace();
-	    }
-	}
+        System.out.println(NAME + "Stopping");
+        // System.out.println(NAME + "Removing icon from system tray.");
+        tray.removeIconFromSystemTray();
+        captureTaker.stop();
+        mouseLocTaker.stop();
+        if (connected && started) {
+            try {
+                sender.stop();
+                started = false;
+                connected = false;
+            } catch (ConnectionException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void setCaptureCoordinates(int x, int y) {
-	captureTaker.setCaptureCoordinates(x, y);
-	mouseLocTaker.setCaptureCoordinates(x, y);
+        captureTaker.setCaptureCoordinates(x, y);
+        mouseLocTaker.setCaptureCoordinates(x, y);
     }
 
     private void notifyListener(ExitCode reason) {
-	if (listener != null) {
-	    System.out.println(NAME + "Notifying app of client stopping.");
-	    listener.onClientStop(reason);
-	}
+        if (listener != null) {
+            System.out.println(NAME + "Notifying app of client stopping.");
+            listener.onClientStop(reason);
+        }
     }
 
     public void addClientListener(ClientListener l) {
-	listener = l;
-	SystemTrayListener systrayListener = new SystemTrayListenerImp(listener);
-	tray.addSystemTrayListener(systrayListener);
-	tray.displayIconOnSystemTray(ssi.sysTrayIcon, ssi.enableTrayActions);
+        listener = l;
+        SystemTrayListener systrayListener = new SystemTrayListenerImp(listener);
+        tray.addSystemTrayListener(systrayListener);
+        tray.displayIconOnSystemTray(ssi.sysTrayIcon, ssi.enableTrayActions);
 
-	NetworkConnectionListener netConnListener = new NetworkConnectionListenerImp(listener);
-	if (sender != null)
-	    sender.addNetworkConnectionListener(netConnListener);
-	else
-	    System.out.println(NAME + "ERROR - Cannot add listener to network connection.");
+        NetworkConnectionListener netConnListener = new NetworkConnectionListenerImp(listener);
+        if (sender != null)
+            sender.addNetworkConnectionListener(netConnListener);
+        else
+            System.out.println(NAME + "ERROR - Cannot add listener to network connection.");
     }
 
     private void printHeader() {
-	System.out.println("-----------------------------------------------------------------------");
-	System.out.println(LICENSE_HEADER);
-	System.out.println("-----------------------------------------------------------------------\n\n");
-	System.out.println("Desktop Sharing v0.71");
-	System.out.println("Start");
-	System.out.println("Connecting to " + ssi.host + ":" + ssi.port + " room " + ssi.room);
-	System.out.println("Sharing " + ssi.captureWidth + "x" + ssi.captureHeight + " at " + ssi.x + "," + ssi.y);
-	System.out.println("Scale to " + ssi.scaleWidth + "x" + ssi.scaleHeight + " with quality = " + ssi.quality);
-	System.out.println("Http Tunnel: " + ssi.httpTunnel);
+        System.out.println("-----------------------------------------------------------------------");
+        System.out.println(LICENSE_HEADER);
+        System.out.println("-----------------------------------------------------------------------\n\n");
+        System.out.println("Desktop Sharing v0.71");
+        System.out.println("Start");
+        System.out.println("Connecting to " + ssi.host + ":" + ssi.port + " room " + ssi.room);
+        System.out.println("Sharing " + ssi.captureWidth + "x" + ssi.captureHeight + " at " + ssi.x + "," + ssi.y);
+        System.out.println("Scale to " + ssi.scaleWidth + "x" + ssi.scaleHeight + " with quality = " + ssi.quality);
+        System.out.println("Http Tunnel: " + ssi.httpTunnel);
     }
-
-    private static final String LICENSE_HEADER = "This program is free software: you can redistribute it and/or modify\n" +
-	"it under the terms of the GNU Lesser General Public License as published by\n" +
-	"the Free Software Foundation, either version 3 of the License, or\n" +
-	"(at your option) any later version.\n\n" +
-	"This program is distributed in the hope that it will be useful,\n" +
-	"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
-	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
-	"GNU General Public License for more details.\n\n" +
-	"You should have received a copy of the GNU Lesser General Public License\n" +
-	"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n" +
-	"Copyright 2010 BigBlueButton. All Rights Reserved.\n\n";
 }
