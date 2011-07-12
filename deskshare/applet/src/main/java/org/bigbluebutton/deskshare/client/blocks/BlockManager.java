@@ -35,8 +35,6 @@ public class BlockManager {
     private final Map<Integer, Block> blocksMap;
     private int numColumns;
     private int numRows;
-    // if changed blocks / total blocks > this, trigger keyframe
-    private float changedPctToTriggerKeyframe = ScreenShareInfo.getKeyframeTriggerThreshold();
 
     private ChangedBlocksListener listeners;
     private Dimension screenDim, blockDim;
@@ -62,11 +60,8 @@ public class BlockManager {
 
     public void processCapturedScreen(BufferedImage capturedScreen) {
         Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
-
         int changedCount = changedBlocks.size();
-
-        System.out.println("Changed Blocks: " + changedCount);
-
+        //System.out.println("Changed Blocks: " + changedCount);
         if (changedCount > 0) {
             partitionBlockMessages(changedBlocks, numColumns);
         }
@@ -90,13 +85,13 @@ public class BlockManager {
         List<Integer> section;
         Integer[] bc;
 
-        System.out.println("Total Changed Blocks: " + changedCount);
+        //System.out.println("Total Changed Blocks: " + changedCount);
         // force a keyframe if more than some % of blocks have changed to minimize tiling
         int numberOfBlocks = getBlockCount();
         boolean forceKeyFrame = false;
         if (numberOfBlocks > 0) {
             float pctChanged = (float)changedCount / numberOfBlocks;
-            if (pctChanged > changedPctToTriggerKeyframe) {
+            if (pctChanged > ScreenShareInfo.getKeyframeTriggerThreshold()) {
                 forceKeyFrame = true;
                 System.out.println(100 * pctChanged + "% blocks changed");
             }
@@ -114,7 +109,7 @@ public class BlockManager {
             bc = new Integer[section.size()];
             section.toArray(bc);
 
-            System.out.println("Notifying Changed Blocks: " + section.size());
+            //System.out.println("Notifying Changed Blocks: " + section.size());
 
             notifyChangedBlockListener(new BlockMessage(bc, forceKeyFrame));
         }
@@ -162,12 +157,7 @@ public class BlockManager {
         return blockDim;
     }
     
-    public float getKeyframeThreshold() {
-        return changedPctToTriggerKeyframe;
-    }
-    
     public void setKeyframeThreshold(float t) {
-        changedPctToTriggerKeyframe = t;
         ScreenShareInfo.getInstance().setKeyframeTriggerThreshold(t);
     }
 }
