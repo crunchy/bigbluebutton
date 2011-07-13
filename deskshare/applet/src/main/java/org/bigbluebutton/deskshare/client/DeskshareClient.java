@@ -38,25 +38,16 @@ public class DeskshareClient {
     public void start() {
         if (ssi.fullScreen) {
             System.out.println(NAME + "Sharing full screen.");
-            shareFullScreen();
+            buildSharer(new FullScreenSharer());
         } else {
             System.out.println(NAME + "Sharing region of screen.");
-            shareWithFrame();
+            buildSharer(new ScreenRegionSharer());
         }
     }
 
-    private void shareWithFrame() {
-        //screenSharer = new ScreenRegionSharer(ssi);
-        screenSharer = new ScreenRegionSharer();
-        screenSharer.addClientListener(listener);
-        screenSharer.start();
-    }
-
-    private void shareFullScreen() {
-        //screenSharer = new FullScreenSharer(ssi);
-        screenSharer = new FullScreenSharer();
-        screenSharer.addClientListener(listener);
-        screenSharer.start();
+    private void buildSharer(ScreenSharer screenSharer) {
+	screenSharer.addClientListener(listener);
+	screenSharer.start();
     }
 
     public void stop() {
