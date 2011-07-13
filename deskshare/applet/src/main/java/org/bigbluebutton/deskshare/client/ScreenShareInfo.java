@@ -48,6 +48,7 @@ public class ScreenShareInfo {
     public static boolean enableTrayActions;
     public static Container contentPane;
     public static Dimension blockSize = new Dimension(64, 64);
+    public static final int MAX_WIDTH = 1280;
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;

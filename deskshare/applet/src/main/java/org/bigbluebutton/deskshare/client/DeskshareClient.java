@@ -24,7 +24,7 @@ package org.bigbluebutton.deskshare.client;
 import java.awt.*;
 
 public class DeskshareClient {
-    
+
     public static final String NAME = "DESKSHARECLIENT: ";
 
     private static ScreenShareInfo ssi;
@@ -71,7 +71,7 @@ public class DeskshareClient {
      * Builds the Deskstop Sharing Client.
      */
     public static class NewBuilder {
-        
+
         private String host = "localhost";
         private int port = 9123;
         private String room = "default-room";
@@ -87,7 +87,6 @@ public class DeskshareClient {
         private Image sysTrayIcon;
         private boolean enableTrayActions = false;
         private boolean fullScreen = false;
-        public static final int MAX_WIDTH = 1280;
         private Container contentPane;
 
         public NewBuilder host(String host) {
@@ -232,9 +231,8 @@ public class DeskshareClient {
 
             System.out.println("Check for scaling[" + captureWidth + "," + captureHeight + "][" + scaleWidth + "," + scaleHeight + "]");
 
-    //	    TODO make configurable
-            if (scaleWidth > MAX_WIDTH) {
-                scaleWidth = MAX_WIDTH;
+            if (scaleWidth > ScreenShareInfo.MAX_WIDTH) {
+                scaleWidth = ScreenShareInfo.MAX_WIDTH;
                 double ratio = (double) captureHeight / (double) captureWidth;
                 scaleHeight = (int) ((double) scaleWidth * ratio);
                 System.out.println("Scaling[" + captureWidth + "," + captureHeight + "][" + scaleWidth + "," + scaleHeight + "]");
