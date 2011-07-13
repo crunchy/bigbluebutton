@@ -70,7 +70,7 @@ public class BlockManager {
     private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen) {
         Vector<Integer> changedBlocks = new Vector<Integer>();
     
-        for (int position = getBlockCount(); position > 1; position--) {
+        for (int position = getBlockCount(); position >= 1; position--) {
             Block block = blocksMap.get(position);
             if (block.hasChanged(capturedScreen)) {
                 changedBlocks.add(position);
