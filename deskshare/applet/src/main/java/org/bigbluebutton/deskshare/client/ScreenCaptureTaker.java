@@ -34,7 +34,6 @@ public class ScreenCaptureTaker {
     private volatile boolean startCapture = false;
     private final Executor screenCapTakerExec = Executors.newSingleThreadExecutor();
 
-
     public ScreenCaptureTaker(ScreenCapture capture) {
     	this.capture = capture;
 	this.filters = new Vector<SimpleFilter>();
@@ -93,19 +92,19 @@ public class ScreenCaptureTaker {
 		// all durations in ms
 		long captureDuration = 0;
 		int cycle = 0;  // when this reaches 100, re-examine the pause duration
-		int idealPauseDuration = 100;
-		int maxCapturePauseDuration = 120;
-		int pauseDuration = idealPauseDuration;
+		int pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
 
 		while (startCapture) {
 		    captureDuration = captureScreen();
 		    pause(pauseDuration);
 		    if (++cycle >= 100) {
 			cycle = 0;
-			if (captureDuration + pauseDuration > maxCapturePauseDuration) {
-			    pauseDuration = Math.max(10, (int) (maxCapturePauseDuration - captureDuration)); // at least 10
+			if (captureDuration + pauseDuration >
+			    ScreenShareInfo.MAX_PAUSE_DURATION) {
+			    pauseDuration = Math.max(10,
+				(int) (ScreenShareInfo.MAX_PAUSE_DURATION - captureDuration)); // at least 10
 			} else {
-			    pauseDuration = idealPauseDuration;
+			    pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
 			}
 		    }
 		}
