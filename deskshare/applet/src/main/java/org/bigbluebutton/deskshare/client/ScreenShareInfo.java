@@ -21,7 +21,10 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import java.awt.*;
+import org.bigbluebutton.deskshare.common.Dimension;
+
+import java.awt.Container;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -44,6 +47,7 @@ public class ScreenShareInfo {
     public static Image sysTrayIcon;
     public static boolean enableTrayActions;
     public static Container contentPane;
+    public static Dimension blockSize = new Dimension(64, 64);
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;

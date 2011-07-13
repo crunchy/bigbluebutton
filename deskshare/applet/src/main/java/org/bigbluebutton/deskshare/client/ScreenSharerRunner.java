@@ -48,8 +48,6 @@ public class ScreenSharerRunner {
 
     private ScreenCaptureTaker captureTaker;
     private BlockManager blockManager;
-    private int blockWidth = 64;
-    private int blockHeight = 64;
     boolean connected = false;
     private boolean started = false;
     private NetworkStreamSender sender;
@@ -84,7 +82,7 @@ public class ScreenSharerRunner {
         // If there is no scaling required, the scaleWidth and scaleHeight will be the same as
         // captureWidth and captureHeight (ritzalam 05/27/2010)
         Dimension screenDim = new Dimension(ssi.scaleWidth, ssi.scaleHeight);
-        Dimension tileDim = new Dimension(blockWidth, blockHeight);
+        Dimension tileDim = ssi.blockSize;
         blockManager = new BlockManager();
         blockManager.initialize(screenDim, tileDim);
 
@@ -92,8 +90,6 @@ public class ScreenSharerRunner {
     }
 
     public void startSharing() {
-        printHeader();
-
         connected = sender.connect();
         if (connected) {
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
@@ -157,15 +153,4 @@ public class ScreenSharerRunner {
             System.out.println(NAME + "ERROR - Cannot add listener to network connection.");
     }
 
-    private void printHeader() {
-        System.out.println("-----------------------------------------------------------------------");
-        System.out.println(LICENSE_HEADER);
-        System.out.println("-----------------------------------------------------------------------\n\n");
-        System.out.println("Desktop Sharing v0.71");
-        System.out.println("Start");
-        System.out.println("Connecting to " + ssi.host + ":" + ssi.port + " room " + ssi.room);
-        System.out.println("Sharing " + ssi.captureWidth + "x" + ssi.captureHeight + " at " + ssi.x + "," + ssi.y);
-        System.out.println("Scale to " + ssi.scaleWidth + "x" + ssi.scaleHeight + " with quality = " + ssi.quality);
-        System.out.println("Http Tunnel: " + ssi.httpTunnel);
-    }
 }
