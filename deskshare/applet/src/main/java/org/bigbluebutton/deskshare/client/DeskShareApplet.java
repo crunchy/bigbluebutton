@@ -23,7 +23,8 @@ package org.bigbluebutton.deskshare.client;
 
 import java.awt.*;
 import javax.swing.*;
-    
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
+
 public class DeskShareApplet extends JApplet implements ClientListener {
     
     public static final String NAME = "DESKSHAREAPPLET: ";
@@ -91,6 +92,8 @@ public class DeskShareApplet extends JApplet implements ClientListener {
             .enableTrayIconActions(false)
             .build();
         client.addClientListener(this);
+        // for debugging; remove
+        displaySettings(); 
         client.start();
     }
 
@@ -111,4 +114,38 @@ public class DeskShareApplet extends JApplet implements ClientListener {
     public void onClientStop(ExitCode reason) {
         client.stop();
     }
+    
+    // interact with settings from client app
+    public void displaySettings() {
+        System.out.println("Config:\n" + ScreenShareInfo.asString());
+    }
+    
+    public String getSettings() {
+        return ScreenShareInfo.asString();
+    }
+    
+    public void setColorDepth(int depth) {
+        ScreenShareInfo.setColorDepth(depth);
+    }
+    
+    public void increaseColorDepth() {
+        ScreenShareInfo.increaseColorDepth();
+    }
+    
+    public void decreaseColorDepth() {
+        ScreenShareInfo.decreaseColorDepth();
+    }
+    
+    public void setMaxColorDepth() {
+        ScreenShareInfo.setMaxColorDepth();
+    }
+    
+    public void setMinColorDepth() {
+        ScreenShareInfo.setMinColorDepth();
+    }
+    
+    public void setKeyframeTriggerThreshold(double t) {
+        ScreenShareInfo.setKeyframeTriggerThreshold(t);
+    }
+
 }

@@ -90,7 +90,7 @@ public class BlockManager {
         int numberOfBlocks = getBlockCount();
         boolean forceKeyFrame = false;
         if (numberOfBlocks > 0) {
-            float pctChanged = (float)changedCount / numberOfBlocks;
+            double pctChanged = (double)changedCount / numberOfBlocks;
             if (pctChanged > ScreenShareInfo.getKeyframeTriggerThreshold()) {
                 forceKeyFrame = true;
                 System.out.println(100 * pctChanged + "% blocks changed");
@@ -157,7 +157,7 @@ public class BlockManager {
         return blockDim;
     }
     
-    public void setKeyframeThreshold(float t) {
+    public void setKeyframeThreshold(double t) {
         ScreenShareInfo.getInstance().setKeyframeTriggerThreshold(t);
     }
 }

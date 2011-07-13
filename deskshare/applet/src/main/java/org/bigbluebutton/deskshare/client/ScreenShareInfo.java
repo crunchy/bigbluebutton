@@ -23,6 +23,7 @@ package org.bigbluebutton.deskshare.client;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class ScreenShareInfo {
     
@@ -46,26 +47,46 @@ public class ScreenShareInfo {
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
-    private static float keyframeTriggerThreshold = 0.4f;
+    private static double keyframeTriggerThreshold = 0.4;
     private static int colorDepth = BufferedImage.TYPE_USHORT_555_RGB;
+    
+    // to increase/decrease color depth
+    private static final int NUM_COLOR_DEPTHS = 13;
+    private static ArrayList<Integer> orderedColorDepths;
+    private static int colorDepthIndex = 0;
 
-    private ScreenShareInfo() {}
+    private ScreenShareInfo() {
+        // ordering color depths based on file size obtained during test, increasing
+        orderedColorDepths = new ArrayList<Integer>(NUM_COLOR_DEPTHS);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_BYTE_BINARY);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_BYTE_GRAY);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_USHORT_555_RGB);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_USHORT_565_RGB);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_4BYTE_ABGR_PRE);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_BYTE_INDEXED);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_USHORT_GRAY);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_3BYTE_BGR);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_INT_BGR);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_INT_RGB);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_4BYTE_ABGR);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_INT_ARGB_PRE);
+        orderedColorDepths.add((Integer)BufferedImage.TYPE_INT_ARGB);
+        // find whichever one is default
+        findColorDepthIndex();
+    }
         
-    public static ScreenShareInfo getInstance() 
-    {
+    public static ScreenShareInfo getInstance() {
         if (instance == null) {
             instance = new ScreenShareInfo();
         }
         return instance;
     }
     
-    public static int getColorDepth()
-    {
+    public static int getColorDepth() {
         return colorDepth;
     }
     
-    public static String getColorDepthName()
-    {
+    public static String getColorDepthName() {
         String name;
         switch(colorDepth) {
             case BufferedImage.TYPE_3BYTE_BGR:
@@ -101,21 +122,61 @@ public class ScreenShareInfo {
         }
         return name;
     }
+    
+    private static int findColorDepthIndex() {
+        colorDepthIndex = orderedColorDepths.indexOf((Integer)colorDepth);
+        return colorDepthIndex;
+    }
 
-    public static float getKeyframeTriggerThreshold()
-    {
+    public static double getKeyframeTriggerThreshold() {
         return keyframeTriggerThreshold;
     }
 
-    public static ScreenShareInfo setColorDepth(int d)
-    {
+    public static ScreenShareInfo setColorDepth(int d) {
         colorDepth = d;
+        System.out.println("Color depth set to " + getColorDepthName() + "\n" + asString());
         return getInstance();
     }
-
-    public static ScreenShareInfo setKeyframeTriggerThreshold(float t)
-    {
-        keyframeTriggerThreshold = t;
+    
+    public static int increaseColorDepth() {
+        int pos = findColorDepthIndex();
+        if (pos >= -1 && pos < orderedColorDepths.size() - 1) {
+            ++pos;
+            setColorDepth(orderedColorDepths.get(pos).intValue());
+        }
+        return colorDepth;
+    }
+    
+    public static int decreaseColorDepth() {
+        int pos = findColorDepthIndex();
+        if (pos > 0 && pos < orderedColorDepths.size()) {
+            --pos;
+            setColorDepth(orderedColorDepths.get(pos).intValue());
+        }
+        return colorDepth;
+    }
+    
+    public static ScreenShareInfo setMinColorDepth() {
+        setColorDepth(orderedColorDepths.get(0).intValue());
         return getInstance();
+    }
+    
+    public static ScreenShareInfo setMaxColorDepth() {
+        setColorDepth(orderedColorDepths.get(orderedColorDepths.size()-1).intValue());
+        return getInstance();
+    }
+    
+    public static ScreenShareInfo setKeyframeTriggerThreshold(double t) {
+        keyframeTriggerThreshold = t;
+        System.out.println("New keyframe threshold set to " + t + "\n" + asString());
+        return getInstance();
+    }
+    
+    public static String asString() {
+        StringBuffer sb = new StringBuffer("Color depth index: " + findColorDepthIndex() + "\n" + 
+            "Color depth name: " + getColorDepthName() + "\n" +
+            "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
+        );
+        return sb.toString();
     }
 }

@@ -23,73 +23,143 @@ package org.bigbluebutton.deskshare.client.frame;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 
 public class CaptureRegionFrame {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private Button btnStartStop;
-	private CaptureRegionListener client;
-	private boolean capturing = false;
-	private WindowlessFrame frame;
-	
-	public CaptureRegionFrame(CaptureRegionListener client, int borderWidth) {
-		frame = new WindowlessFrame(borderWidth);
-		this.client = client;
-		frame.setCaptureRegionListener(client);
-		frame.setToolbar(createToolbar());
-	}
-	
-	public void setHeight(int h) {
-		frame.setHeight(h);
-	}
-	
-	public void setWidth(int w) {
-		frame.setWidth(w);
-	}
-	
-	public void setLocation(int x, int y) {
-		frame.setLocation(x, y);
-	}
-	
-	public void setVisible(boolean visible) {
-		frame.setVisible(visible);	
-	}
-	
-	
-	private JPanel createToolbar() {
-		final JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout());
-		capturing = false;
-		btnStartStop = new Button("Start Sharing");
-		btnStartStop.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				if (capturing) {
-//					capturing = false;
-//					btnStartStop.setLabel("Start Capture");
-//					stopCapture();
-//				} else {
-//					capturing = true;
-//					btnStartStop.setLabel("Stop Capture");
-					startCapture();
-//				}					
-			}
-		});
-		panel.add(btnStartStop);
-		return panel;
-	}
-	
-	private void startCapture() {
-		frame.changeBorderToBlue();
-		frame.removeResizeListeners();
-		Rectangle rect = frame.getFramedRectangle();
-		client.onStartCapture(rect.x, rect.y, frame.getWidth(), frame.getHeight());
-	}
-	
-	private void stopCapture() {		
-		frame.changeBorderToRed();
-		client.onStopCapture();
-	}
+    private Button btnStartStop;
+    private JComboBox colorDepthSelect, keyframeThresholdSelect;
+    private final String[] colorDepthNames = { 
+        "TYPE_BYTE_BINARY",
+        "TYPE_BYTE_GRAY",
+        "TYPE_USHORT_555_RGB (default)",
+        "TYPE_USHORT_565_RGB",
+        "TYPE_4BYTE_ABGR_PRE",
+        "TYPE_BYTE_INDEXED",
+        "TYPE_USHORT_GRAY",
+        "TYPE_3BYTE_BGR",
+        "TYPE_INT_BGR",
+        "TYPE_INT_RGB",
+        "TYPE_4BYTE_ABGR",
+        "TYPE_INT_ARGB_PRE",
+        "TYPE_INT_ARGB",
+    };
+    private final int colorDepthSelectedIndex = 2;
+    private final int[] colorDepthValues = {
+        BufferedImage.TYPE_BYTE_BINARY,
+        BufferedImage.TYPE_BYTE_GRAY,
+        BufferedImage.TYPE_USHORT_555_RGB,
+        BufferedImage.TYPE_USHORT_565_RGB,
+        BufferedImage.TYPE_4BYTE_ABGR_PRE,
+        BufferedImage.TYPE_BYTE_INDEXED,
+        BufferedImage.TYPE_USHORT_GRAY,
+        BufferedImage.TYPE_3BYTE_BGR,
+        BufferedImage.TYPE_INT_BGR,
+        BufferedImage.TYPE_INT_RGB,
+        BufferedImage.TYPE_4BYTE_ABGR,
+        BufferedImage.TYPE_INT_ARGB_PRE,
+        BufferedImage.TYPE_INT_ARGB,
+    };
+    private final String[] keyframeThresholdNames = {
+        "10%",
+        "20%",
+        "30%",
+        "40% (default)",
+        "50%",
+        "60%",
+        "70%",
+        "80%",
+        "90%"
+    };
+    private final int keyframeThresholdSelectedIndex = 3;
+
+    private CaptureRegionListener client;
+    private boolean capturing = false;
+    private WindowlessFrame frame;
+    
+    public CaptureRegionFrame(CaptureRegionListener client, int borderWidth) {
+        frame = new WindowlessFrame(borderWidth);
+        this.client = client;
+        frame.setCaptureRegionListener(client);
+        frame.setToolbar(createToolbar());
+    }
+    
+    public void setHeight(int h) {
+        frame.setHeight(h);
+    }
+    
+    public void setWidth(int w) {
+        frame.setWidth(w);
+    }
+    
+    public void setLocation(int x, int y) {
+        frame.setLocation(x, y);
+    }
+    
+    public void setVisible(boolean visible) {
+        frame.setVisible(visible);
+    }
+    
+    private JPanel createToolbar() {
+        final JPanel panel = new JPanel();
+        panel.setLayout(new FlowLayout());
+        capturing = false;
+        btnStartStop = new Button("Start Sharing");
+        btnStartStop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (capturing) {
+                    capturing = false;
+                    btnStartStop.setLabel("Start Capture");
+                    stopCapture();
+                } else {
+                    capturing = true;
+                    btnStartStop.setLabel("Stop Capture");
+                    startCapture();
+                }
+                //startCapture();
+            }
+        });
+        panel.add(btnStartStop);
+        
+        // pulldown menus
+        colorDepthSelect = new JComboBox(colorDepthNames);
+        colorDepthSelect.setSelectedIndex(colorDepthSelectedIndex);
+        colorDepthSelect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ScreenShareInfo.setColorDepth(colorDepthValues[colorDepthSelect.getSelectedIndex()]);
+            }
+        });
+        panel.add(colorDepthSelect);
+        
+        keyframeThresholdSelect = new JComboBox(keyframeThresholdNames);
+        keyframeThresholdSelect.setSelectedIndex(keyframeThresholdSelectedIndex);
+        keyframeThresholdSelect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                double newThreshold = (double)(keyframeThresholdSelect.getSelectedIndex() + 1) * .1;
+                ScreenShareInfo.setKeyframeTriggerThreshold(newThreshold);
+            }
+        });
+        panel.add(keyframeThresholdSelect);
+        
+        return panel;
+    }
+    
+    private void startCapture() {
+        frame.changeBorderToBlue();
+        frame.removeResizeListeners();
+        Rectangle rect = frame.getFramedRectangle();
+        client.onStartCapture(rect.x, rect.y, frame.getWidth(), frame.getHeight());
+    }
+    
+    private void stopCapture() {
+        frame.changeBorderToRed();
+        client.onStopCapture();
+    }
 }
