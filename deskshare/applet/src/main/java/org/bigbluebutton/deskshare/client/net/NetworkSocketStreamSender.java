@@ -110,15 +110,21 @@ public class NetworkSocketStreamSender implements Runnable {
     
     private void sendHeader(byte[] header) throws IOException {
         if (outstream != null) {
-	    ssi.incrBytesSent(header.length);
+	    long start = System.currentTimeMillis();
             outstream.write(header);
-        }
+	    long finish = System.currentTimeMillis();
+	    ssi.incrBytesSent(header.length);
+	    ssi.incTransitTime(finish - start);
+	}
     }
     
     private void sendToStream(ByteArrayOutputStream dataToSend) throws IOException {
         if (outstream != null) {
-	    ssi.incrBytesSent(dataToSend.size());
+	    long start = System.currentTimeMillis();
             dataToSend.writeTo(outstream);
+	    long finish = System.currentTimeMillis();
+	    ssi.incrBytesSent(dataToSend.size());
+	    ssi.incTransitTime(finish - start);
         }
     }
                     

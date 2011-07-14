@@ -47,6 +47,8 @@ public class ScreenShareInfo {
     public static int y;
     public static boolean httpTunnel;
     public static boolean fullScreen;
+    public static boolean trackMouse = false;
+    public static boolean statsLogging = true;
     public static Image sysTrayIcon;
     public static boolean enableTrayActions;
     public static Container contentPane;
@@ -71,11 +73,13 @@ public class ScreenShareInfo {
     private AtomicInteger bytesSent = new AtomicInteger();
     private AtomicInteger blocksSent = new AtomicInteger();
     private AtomicInteger messagesSent = new AtomicInteger();
+    private AtomicLong transitTime = new AtomicLong();
 
     private AtomicLong timeStarted = new AtomicLong();
-    private static String STATS_FORMAT = "time: %TQ; frames: %,d; blocks: %,d; " +
-	"messages: %,d; " +
-	    "bytes: %,d\n";
+
+    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %," +
+	"d; " +
+	"messages: %,d; bytes: %,d; transit ms: %,d\n";
     private static final long STATS_INTERVAL = 2000;
 
     private ScreenShareInfo() {
@@ -225,10 +229,16 @@ public class ScreenShareInfo {
 	framesCaptured.addAndGet(frames);
     }
 
+    public void incTransitTime(long ms) {
+	transitTime.addAndGet(ms);
+    }
+
     public void printStats(){
-	long now = System.currentTimeMillis();
-	System.out.printf(STATS_FORMAT, now, framesCaptured.get(),
-	    blocksSent.get(), messagesSent.get(), bytesSent.get());
+	float duration = (System.currentTimeMillis() - timeStarted.get()) /
+	1000F;
+	System.out.printf(STATS_FORMAT, duration, framesCaptured.get(),
+	    blocksSent.get(), messagesSent.get(), bytesSent.get(),
+	    transitTime.get());
     }
 
     public void statsLogging() {

@@ -78,7 +78,10 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
             captureTaker.addFilter(filter);
         }
 
-        mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
+	if (ssi.trackMouse) {
+		mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
+	}
+
 
         // Use the scaleWidth and scaleHeight as the dimension we pass to the BlockManager.
         // If there is no scaling required, the scaleWidth and scaleHeight will be the same as
@@ -104,13 +107,18 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
             sender.start();
 
-            MouseLocationListenerImp mouseLocListener = new MouseLocationListenerImp(sender, ssi.room);
-            mouseLocTaker.addListener(mouseLocListener);
-            mouseLocTaker.start();
+	    if(mouseLocTaker != null) {
+            	MouseLocationListenerImp mouseLocListener = new MouseLocationListenerImp(sender, ssi.room);
+            	mouseLocTaker.addListener(mouseLocListener);
+            	mouseLocTaker.start();
+	    }
 
             started = true;
 
-	    ssi.statsLogging();
+	    if(ssi.statsLogging) {
+		ssi.statsLogging();
+	    }
+
         } else {
             notifyListener(ExitCode.DESKSHARE_SERVICE_UNAVAILABLE);
         }
