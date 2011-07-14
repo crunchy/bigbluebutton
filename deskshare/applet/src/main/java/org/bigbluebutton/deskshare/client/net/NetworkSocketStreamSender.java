@@ -52,7 +52,7 @@ public class NetworkSocketStreamSender implements Runnable {
         this.blockDim = blockDim;
         this.seqNumGenerator = seqNumGenerator;
 
-	ssi = ScreenShareInfo.getInstance();
+        ssi = ScreenShareInfo.getInstance();
     }
     
     public void addListener(NetworkStreamListener listener) {
