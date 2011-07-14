@@ -63,7 +63,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
 
         captureTaker = new ScreenCaptureTaker(capture);
-	captureTaker.addListener(this);
+        captureTaker.addListener(this);
 
         if (ssi.contentPane != null) {
             captureTaker.addListener(new ScreenPreview(ssi.contentPane));
@@ -78,9 +78,9 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
             captureTaker.addFilter(filter);
         }
 
-	if (ssi.trackMouse) {
-		mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
-	}
+        if (ssi.trackMouse) {
+            mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
+        }
 
 
         // Use the scaleWidth and scaleHeight as the dimension we pass to the BlockManager.
@@ -97,7 +97,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
     public void startSharing() {
         connected = sender.connect();
         if (connected) {
-	    ssi.setStartTime(System.currentTimeMillis());
+            ssi.setStartTime(System.currentTimeMillis());
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
             blockManager.addListener(changedBlocksListener);
 
