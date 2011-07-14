@@ -47,7 +47,7 @@ public class ScreenShareInfo {
     public static int y;
     public static boolean httpTunnel;
     public static boolean fullScreen;
-    public static boolean trackMouse = false;
+    public static boolean trackMouse = true;
     public static boolean statsLogging = true;
     public static Image sysTrayIcon;
     public static boolean enableTrayActions;
@@ -78,8 +78,8 @@ public class ScreenShareInfo {
     private AtomicLong timeStarted = new AtomicLong();
 
     private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %," +
-	"d; " +
-	"messages: %,d; bytes: %,d; transit ms: %,d\n";
+        "d; " +
+        "messages: %,d; bytes: %,d; transit ms: %,d\n";
     private static final long STATS_INTERVAL = 2000;
 
     private ScreenShareInfo() {
@@ -207,7 +207,6 @@ public class ScreenShareInfo {
         return sb.toString();
     }
 
-
     public void incrBytesSent(int bytes){
 	bytesSent.addAndGet(bytes);
     }
@@ -242,12 +241,12 @@ public class ScreenShareInfo {
     }
 
     public void statsLogging() {
-	    Timer timer = new Timer(true);
-	    timer.scheduleAtFixedRate(new TimerTask() {
-		@Override
-		public void run() {
-		    printStats();
-		}
-	    }, STATS_INTERVAL, STATS_INTERVAL);
+        Timer timer = new Timer(true);
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                printStats();
+            }
+        }, STATS_INTERVAL, STATS_INTERVAL);
     }
 }
