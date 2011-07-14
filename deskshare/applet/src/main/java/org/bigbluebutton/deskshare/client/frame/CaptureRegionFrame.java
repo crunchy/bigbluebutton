@@ -33,6 +33,7 @@ public class CaptureRegionFrame {
 
     private Button btnStartStop;
     private JComboBox colorDepthSelect, keyframeThresholdSelect;
+    private JLabel windowSizeLabel;
     private final String[] colorDepthNames = { 
         "TYPE_BYTE_BINARY",
         "TYPE_BYTE_GRAY",
@@ -112,6 +113,7 @@ public class CaptureRegionFrame {
         btnStartStop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                /*
                 if (capturing) {
                     capturing = false;
                     btnStartStop.setLabel("Start Capture");
@@ -120,8 +122,8 @@ public class CaptureRegionFrame {
                     capturing = true;
                     btnStartStop.setLabel("Stop Capture");
                     startCapture();
-                }
-                //startCapture();
+                }*/
+                startCapture();
             }
         });
         panel.add(btnStartStop);
@@ -148,10 +150,19 @@ public class CaptureRegionFrame {
         });
         panel.add(keyframeThresholdSelect);
         
+        windowSizeLabel = new JLabel("Window size will go here");
+        panel.add(windowSizeLabel);
+
         return panel;
     }
     
+    public void updateWindowSizeLabel() {
+        Rectangle rect = frame.getFramedRectangle();
+        windowSizeLabel.setText((int)rect.getWidth() + "x" + (int)rect.getHeight());
+    }
+    
     private void startCapture() {
+        updateWindowSizeLabel();
         frame.changeBorderToBlue();
         frame.removeResizeListeners();
         Rectangle rect = frame.getFramedRectangle();
