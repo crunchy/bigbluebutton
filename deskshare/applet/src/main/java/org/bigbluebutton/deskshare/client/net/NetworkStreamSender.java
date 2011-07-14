@@ -21,6 +21,7 @@ package org.bigbluebutton.deskshare.client.net;
 
 import net.jcip.annotations.ThreadSafe;
 import org.bigbluebutton.deskshare.client.ExitCode;
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.common.Dimension;
 
@@ -62,7 +63,8 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         this.blockDim = blockDim;
         this.httpTunnel = httpTunnel;
 
-        numThreads = Runtime.getRuntime().availableProcessors();
+
+	numThreads = ScreenShareInfo.NETWORK_SENDER_COUNT;
         System.out.println(NAME + "Starting up " + numThreads + " sender threads.");
         executor = Executors.newFixedThreadPool(numThreads);
     }
@@ -104,7 +106,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                     } catch (ConnectionException e) {
                         failedAttempts++;
                     }
-                }   
+                }
                 return failedAttempts != numThreads;
             }
         } else {

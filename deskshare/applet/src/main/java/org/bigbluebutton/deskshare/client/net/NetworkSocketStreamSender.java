@@ -20,6 +20,7 @@
 package org.bigbluebutton.deskshare.client.net;
 
 import org.bigbluebutton.deskshare.client.ExitCode;
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.awt.*;
@@ -40,6 +41,7 @@ public class NetworkSocketStreamSender implements Runnable {
     private final int id;
     private NetworkStreamListener listener;
     private final SequenceNumberGenerator seqNumGenerator;
+    private ScreenShareInfo ssi;
     
     public NetworkSocketStreamSender(int id, NextBlockRetriever retriever, String room, 
         Dimension screenDim, Dimension blockDim, SequenceNumberGenerator seqNumGenerator) {
@@ -49,6 +51,8 @@ public class NetworkSocketStreamSender implements Runnable {
         this.screenDim = screenDim;
         this.blockDim = blockDim;
         this.seqNumGenerator = seqNumGenerator;
+
+	ssi = ScreenShareInfo.getInstance();
     }
     
     public void addListener(NetworkStreamListener listener) {
@@ -106,12 +110,14 @@ public class NetworkSocketStreamSender implements Runnable {
     
     private void sendHeader(byte[] header) throws IOException {
         if (outstream != null) {
+	    ssi.incrBytesSent(header.length);
             outstream.write(header);
         }
     }
     
     private void sendToStream(ByteArrayOutputStream dataToSend) throws IOException {
         if (outstream != null) {
+	    ssi.incrBytesSent(dataToSend.size());
             dataToSend.writeTo(outstream);
         }
     }
@@ -136,6 +142,8 @@ public class NetworkSocketStreamSender implements Runnable {
     }
     
     private void processNextMessageToSend(Message message) throws IOException {
+	ssi.incrMessagesSent(1);
+
         if (message.getMessageType() == Message.MessageType.BLOCK) {
             ByteArrayOutputStream dataToSend = new ByteArrayOutputStream();
             dataToSend.reset();
@@ -154,7 +162,8 @@ public class NetworkSocketStreamSender implements Runnable {
                 BlockVideoData bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), ((BlockMessage) message).getForceKeyFrame());
                 BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
             }
-                    
+
+	    ssi.incrBlocksSent(changedBlocks.length);
             //System.out.println(blocksStr);
                     
             sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));

@@ -63,6 +63,7 @@ public class BlockManager {
         int changedCount = changedBlocks.size();
         //System.out.println("Changed Blocks: " + changedCount);
         if (changedCount > 0) {
+//	    TODO move maximum message size to SSI
             partitionBlockMessages(changedBlocks, numColumns);
         }
     }

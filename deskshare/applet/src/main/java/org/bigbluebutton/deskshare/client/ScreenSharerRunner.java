@@ -30,7 +30,7 @@ import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.awt.image.BufferedImage;
 
-public class ScreenSharerRunner {
+public class ScreenSharerRunner implements ScreenCaptureListener {
     private static final String LICENSE_HEADER = "This program is free software: you can redistribute it and/or modify\n" +
         "it under the terms of the GNU Lesser General Public License as published by\n" +
         "the Free Software Foundation, either version 3 of the License, or\n" +
@@ -63,6 +63,8 @@ public class ScreenSharerRunner {
         ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
 
         captureTaker = new ScreenCaptureTaker(capture);
+	captureTaker.addListener(this);
+
         if (ssi.contentPane != null) {
             captureTaker.addListener(new ScreenPreview(ssi.contentPane));
         }
@@ -92,6 +94,7 @@ public class ScreenSharerRunner {
     public void startSharing() {
         connected = sender.connect();
         if (connected) {
+	    ssi.setStartTime(System.currentTimeMillis());
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
             blockManager.addListener(changedBlocksListener);
 
@@ -106,6 +109,8 @@ public class ScreenSharerRunner {
             mouseLocTaker.start();
 
             started = true;
+
+	    ssi.statsLogging();
         } else {
             notifyListener(ExitCode.DESKSHARE_SERVICE_UNAVAILABLE);
         }
@@ -153,4 +158,8 @@ public class ScreenSharerRunner {
             System.out.println(NAME + "ERROR - Cannot add listener to network connection.");
     }
 
+    @Override
+    public void onScreenCaptured(BufferedImage screen) {
+	ssi.incFramesCaptured(1);
+    }
 }

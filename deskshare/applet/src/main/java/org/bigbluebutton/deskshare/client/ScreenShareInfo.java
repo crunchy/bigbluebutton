@@ -23,10 +23,13 @@ package org.bigbluebutton.deskshare.client;
 
 import org.bigbluebutton.deskshare.common.Dimension;
 
-import java.awt.Container;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ScreenShareInfo {
     
@@ -51,6 +54,7 @@ public class ScreenShareInfo {
     public static final int MAX_WIDTH = 1280;
     public static final int IDEAL_PAUSE_DURATION = 100;
     public static final int MAX_PAUSE_DURATION = 120;
+    public static final int NETWORK_SENDER_COUNT = Runtime.getRuntime().availableProcessors();
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
@@ -61,6 +65,18 @@ public class ScreenShareInfo {
     private static final int NUM_COLOR_DEPTHS = 13;
     private static ArrayList<Integer> orderedColorDepths;
     private static int colorDepthIndex = 0;
+
+//
+    private AtomicInteger framesCaptured = new AtomicInteger();
+    private AtomicInteger bytesSent = new AtomicInteger();
+    private AtomicInteger blocksSent = new AtomicInteger();
+    private AtomicInteger messagesSent = new AtomicInteger();
+
+    private AtomicLong timeStarted = new AtomicLong();
+    private static String STATS_FORMAT = "time: %TQ; frames: %,d; blocks: %,d; " +
+	"messages: %,d; " +
+	    "bytes: %,d\n";
+    private static final long STATS_INTERVAL = 2000;
 
     private ScreenShareInfo() {
         // ordering color depths based on file size obtained during test, increasing
@@ -185,5 +201,43 @@ public class ScreenShareInfo {
             "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
         );
         return sb.toString();
+    }
+
+
+    public void incrBytesSent(int bytes){
+	bytesSent.addAndGet(bytes);
+    }
+
+    public void incrMessagesSent(int messages){
+	messagesSent.addAndGet(messages);
+    }
+
+    public void incrBlocksSent(int blocks){
+	blocksSent.addAndGet(blocks);
+    }
+
+
+    public void setStartTime(long time) {
+	timeStarted.addAndGet(time);
+    }
+
+    public void incFramesCaptured(int frames) {
+	framesCaptured.addAndGet(frames);
+    }
+
+    public void printStats(){
+	long now = System.currentTimeMillis();
+	System.out.printf(STATS_FORMAT, now, framesCaptured.get(),
+	    blocksSent.get(), messagesSent.get(), bytesSent.get());
+    }
+
+    public void statsLogging() {
+	    Timer timer = new Timer(true);
+	    timer.scheduleAtFixedRate(new TimerTask() {
+		@Override
+		public void run() {
+		    printStats();
+		}
+	    }, STATS_INTERVAL, STATS_INTERVAL);
     }
 }
