@@ -28,19 +28,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class BlockStreamProtocolEncoderTest {
-	
-	@BeforeMethod 
-	public void setUp() {
-		
-	}
-	
-	@Test
-	public void testEncodeFlvHeader() throws IOException {
-		ByteArrayOutputStream data = new ByteArrayOutputStream();
-		data.reset();
-		BlockStreamProtocolEncoder.encodeStartStreamMessage("testroom", new Dimension(64,64), new Dimension(32,32), data);
-		Assert.assertEquals(data.size(), 26);
-//		BlockStreamProtocolEncoder.encodeHeaderAndLength(data);
-		
-	}
+
+    @BeforeMethod
+    public void setUp() {
+
+    }
+
+    @Test
+    public void testEnencodeBlockcodeFlvHeader() throws IOException {
+	ByteArrayOutputStream data = new ByteArrayOutputStream();
+	data.reset();
+	BlockStreamProtocolEncoder.encodeStartStreamMessage("testroom", new Dimension(64, 64), new Dimension(32, 32), data, 1);
+	Assert.assertEquals(data.size(), 26);
+	BlockStreamProtocolEncoder.encodeHeaderAndLength(data);
+
+    }
 }

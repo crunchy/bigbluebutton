@@ -19,7 +19,7 @@
 * 
 * ===License Header===
 */
-package org.bigbluebutton.deskshare.client.encoder;
+package org.bigbluebutton.deskshare.client.unused.encoder;
 
 import org.bigbluebutton.deskshare.client.blocks.Block;
 

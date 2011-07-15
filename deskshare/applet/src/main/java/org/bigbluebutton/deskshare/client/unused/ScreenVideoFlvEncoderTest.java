@@ -18,7 +18,7 @@
  * $Id: $
  */
 
-package org.bigbluebutton.deskshare.client.encode;
+package org.bigbluebutton.deskshare.client.unused;
 
 import org.bigbluebutton.deskshare.client.unused.ScreenVideoFlvEncoder;
 import org.testng.Assert;
