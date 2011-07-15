@@ -58,6 +58,8 @@ public class ScreenShareInfo {
     public static final int MAX_PAUSE_DURATION = 120;
     public static final int NETWORK_SENDER_COUNT = Runtime.getRuntime().availableProcessors();
     public static final int MAX_QUEUED_MESSAGES = NETWORK_SENDER_COUNT * 2;
+    // decrease screenshot frequency if queue > this
+    public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 3; 
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
@@ -69,7 +71,6 @@ public class ScreenShareInfo {
     private static ArrayList<Integer> orderedColorDepths;
     private static int colorDepthIndex = 0;
 
-//
     private AtomicInteger framesCaptured = new AtomicInteger();
     private AtomicInteger bytesSent = new AtomicInteger();
     private AtomicInteger blocksSent = new AtomicInteger();
@@ -108,7 +109,10 @@ public class ScreenShareInfo {
         }
         return instance;
     }
-    
+
+    /***********************************
+     * color depth accessors
+    ************************************/
     public static int getColorDepth() {
         return colorDepth;
     }
@@ -155,10 +159,6 @@ public class ScreenShareInfo {
         return colorDepthIndex;
     }
 
-    public static double getKeyframeTriggerThreshold() {
-        return keyframeTriggerThreshold;
-    }
-
     public static ScreenShareInfo setColorDepth(int d) {
         colorDepth = d;
         System.out.println("Color depth set to " + getColorDepthName() + "\n" + asString());
@@ -193,54 +193,44 @@ public class ScreenShareInfo {
         return getInstance();
     }
     
+    /***********************************
+     * keyframe accessors
+    ************************************/
+    public static double getKeyframeTriggerThreshold() {
+        return keyframeTriggerThreshold;
+    }
+    
     public static ScreenShareInfo setKeyframeTriggerThreshold(double t) {
         keyframeTriggerThreshold = t;
         System.out.println("New keyframe threshold set to " + t + "\n" + asString());
         return getInstance();
     }
-    
-    public static String asString() {
-        StringBuffer sb = new StringBuffer("Color depth index: " + findColorDepthIndex() + "\n" + 
-            "Color depth name: " + getColorDepthName() + "\n" +
-            "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
-        );
-        return sb.toString();
-    }
 
+    /***************************************
+     * stats logging
+    ***************************************/
     public void incrBytesSent(int bytes){
-	bytesSent.addAndGet(bytes);
+        bytesSent.addAndGet(bytes);
     }
 
     public void incrMessagesSent(int messages){
-	messagesSent.addAndGet(messages);
+        messagesSent.addAndGet(messages);
     }
 
     public void incrBlocksSent(int blocks){
-	blocksSent.addAndGet(blocks);
+        blocksSent.addAndGet(blocks);
     }
 
-
     public void setStartTime(long time) {
-	timeStarted.addAndGet(time);
+        timeStarted.addAndGet(time);
     }
 
     public void incFramesCaptured(int frames) {
-	framesCaptured.addAndGet(frames);
+        framesCaptured.addAndGet(frames);
     }
 
     public void incTransitTime(long ms) {
-	transitTime.addAndGet(ms);
-    }
-
-    public void printStats(){
-        float duration = (System.currentTimeMillis() - timeStarted.get()) / 1000F;
-        int frames = framesCaptured.get();
-        float fps = frames / duration;
-        float kB  = bytesSent.get() / 1024F;
-        float transit_sec = transitTime.get() / 1000;
-        float kbps = (kB * 8) / transit_sec;
-
-        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, transit_sec, fps, kbps);
+        transitTime.addAndGet(ms);
     }
 
     public void statsLogging() {
@@ -251,5 +241,27 @@ public class ScreenShareInfo {
                 printStats();
             }
         }, STATS_INTERVAL, STATS_INTERVAL);
+    }
+    
+    /*****************************
+    * pretty output methods
+    ******************************/
+    public static String asString() {
+        StringBuffer sb = new StringBuffer("Color depth index: " + findColorDepthIndex() + "\n" + 
+            "Color depth name: " + getColorDepthName() + "\n" +
+            "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
+        );
+        return sb.toString();
+    }
+    
+    public void printStats(){
+        float duration = (System.currentTimeMillis() - timeStarted.get()) / 1000F;
+        int frames = framesCaptured.get();
+        float fps = frames / duration;
+        float kB  = bytesSent.get() / 1024F;
+        float transit_sec = transitTime.get() / 1000;
+        float kbps = (kB * 8) / transit_sec;
+
+        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, transit_sec, fps, kbps);
     }
 }
