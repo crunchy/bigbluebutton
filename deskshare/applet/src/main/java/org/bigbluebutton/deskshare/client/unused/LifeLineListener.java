@@ -19,13 +19,11 @@
 * 
 * ===License Header===
 */
-package org.bigbluebutton.deskshare.client.encoder;
+package org.bigbluebutton.deskshare.client.unused;
 
-public class FlvEncodeException extends Exception {
+import org.bigbluebutton.deskshare.client.ExitCode;
 
-	private static final long serialVersionUID = -3377474098350652011L;
+public interface LifeLineListener {
 
-	public FlvEncodeException(String message) {
-		super(message);
-	}
+	public void disconnected(ExitCode reason);
 }

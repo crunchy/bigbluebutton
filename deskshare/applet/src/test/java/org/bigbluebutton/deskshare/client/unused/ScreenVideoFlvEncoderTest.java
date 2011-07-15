@@ -18,7 +18,7 @@
  * $Id: $
  */
 
-package org.bigbluebutton.deskshare.client.encoder;
+package org.bigbluebutton.deskshare.client.unused;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

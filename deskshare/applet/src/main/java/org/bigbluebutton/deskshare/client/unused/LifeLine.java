@@ -19,7 +19,9 @@
 * 
 * ===License Header===
 */
-package org.bigbluebutton.deskshare.client;
+package org.bigbluebutton.deskshare.client.unused;
+
+import org.bigbluebutton.deskshare.client.ExitCode;
 
 import java.io.BufferedReader;
 import java.io.IOException;

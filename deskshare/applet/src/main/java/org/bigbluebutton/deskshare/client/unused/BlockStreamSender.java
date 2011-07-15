@@ -17,10 +17,13 @@
 * with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 * 
 **/
-package org.bigbluebutton.deskshare.client.net;
+package org.bigbluebutton.deskshare.client.unused;
 
 import org.bigbluebutton.deskshare.client.blocks.Block;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
+import org.bigbluebutton.deskshare.client.net.BlockVideoData;
+import org.bigbluebutton.deskshare.client.net.ConnectionException;
+import org.bigbluebutton.deskshare.client.net.ScreenCaptureSender;
 import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.io.ByteArrayOutputStream;

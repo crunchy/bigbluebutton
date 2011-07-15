@@ -23,6 +23,9 @@ package org.bigbluebutton.deskshare.client;
 
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.client.blocks.ChangedBlocksListener;
+import org.bigbluebutton.deskshare.client.image_filters.ChangeTypeFilter;
+import org.bigbluebutton.deskshare.client.image_filters.ScalingFilter;
+import org.bigbluebutton.deskshare.client.image_filters.SimpleFilter;
 import org.bigbluebutton.deskshare.client.net.ConnectionException;
 import org.bigbluebutton.deskshare.client.net.NetworkConnectionListener;
 import org.bigbluebutton.deskshare.client.net.NetworkStreamSender;

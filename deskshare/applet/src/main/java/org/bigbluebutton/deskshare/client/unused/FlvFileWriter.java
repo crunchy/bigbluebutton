@@ -19,7 +19,7 @@
 * 
 * ===License Header===
 */
-package org.bigbluebutton.deskshare.client;
+package org.bigbluebutton.deskshare.client.unused;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;

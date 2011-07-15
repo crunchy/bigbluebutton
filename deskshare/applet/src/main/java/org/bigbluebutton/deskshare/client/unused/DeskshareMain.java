@@ -19,10 +19,13 @@
 * 
 * ===License Header===
 */
-package org.bigbluebutton.deskshare.client;
+package org.bigbluebutton.deskshare.client.unused;
 
 import jargs.gnu.CmdLineParser;
 import jargs.gnu.CmdLineParser.Option;
+import org.bigbluebutton.deskshare.client.ClientListener;
+import org.bigbluebutton.deskshare.client.DeskshareClient;
+import org.bigbluebutton.deskshare.client.ExitCode;
 
 import java.awt.*;
 import java.util.ArrayList;

@@ -20,7 +20,7 @@
 
 package org.bigbluebutton.deskshare.client.encode;
 
-import org.bigbluebutton.deskshare.client.encoder.ScreenVideoFlvEncoder;
+import org.bigbluebutton.deskshare.client.unused.ScreenVideoFlvEncoder;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

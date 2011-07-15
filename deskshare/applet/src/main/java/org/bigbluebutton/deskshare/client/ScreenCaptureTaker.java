@@ -21,6 +21,8 @@
  */
 package org.bigbluebutton.deskshare.client;
 
+import org.bigbluebutton.deskshare.client.image_filters.SimpleFilter;
+
 import java.awt.image.BufferedImage;
 import java.util.Vector;
 import java.util.concurrent.Executor;

@@ -17,10 +17,10 @@
 * with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 * 
 **/
-package org.bigbluebutton.deskshare.client.net;
+package org.bigbluebutton.deskshare.client.unused;
 
-import org.bigbluebutton.deskshare.client.encoder.FlvEncodeException;
-import org.bigbluebutton.deskshare.client.encoder.ScreenVideoFlvEncoder;
+import org.bigbluebutton.deskshare.client.net.ConnectionException;
+import org.bigbluebutton.deskshare.client.net.ScreenCaptureSender;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;

@@ -1,4 +1,4 @@
-package org.bigbluebutton.deskshare.client;
+package org.bigbluebutton.deskshare.client.image_filters;
 
 import java.awt.image.BufferedImage;
 

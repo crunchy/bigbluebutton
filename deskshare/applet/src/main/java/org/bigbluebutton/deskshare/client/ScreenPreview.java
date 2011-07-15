@@ -1,5 +1,7 @@
 package org.bigbluebutton.deskshare.client;
 
+import org.bigbluebutton.deskshare.client.image_filters.ScalingFilter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
