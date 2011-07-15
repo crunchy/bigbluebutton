@@ -54,9 +54,8 @@ public class ScreenShareInfo {
     public static Container contentPane;
     public static Dimension blockSize = new Dimension(64, 64);
     public static final int MAX_WIDTH = 1280;
-    public static final int IDEAL_PAUSE_DURATION = 100;
-    public static final int MAX_PAUSE_DURATION = 120;
     public static final int NETWORK_SENDER_COUNT = Runtime.getRuntime().availableProcessors();
+    public static final int MAX_QUEUED_MESSAGES = NETWORK_SENDER_COUNT * 2;
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
@@ -77,9 +76,8 @@ public class ScreenShareInfo {
 
     private AtomicLong timeStarted = new AtomicLong();
 
-    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %," +
-        "d; " +
-        "messages: %,d; bytes: %,d; transit ms: %,d\n";
+    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; transit s: %,.3f\n" +
+            "fps: %.2f; kbps: %.3f\n";
     private static final long STATS_INTERVAL = 2000;
 
     private ScreenShareInfo() {
@@ -233,11 +231,14 @@ public class ScreenShareInfo {
     }
 
     public void printStats(){
-	float duration = (System.currentTimeMillis() - timeStarted.get()) /
-	1000F;
-	System.out.printf(STATS_FORMAT, duration, framesCaptured.get(),
-	    blocksSent.get(), messagesSent.get(), bytesSent.get(),
-	    transitTime.get());
+        float duration = (System.currentTimeMillis() - timeStarted.get()) / 1000F;
+        int frames = framesCaptured.get();
+        float fps = frames / duration;
+        float kB  = bytesSent.get() / 1024F;
+        float transit_sec = transitTime.get() / 1000;
+        float kbps = (kB * 8) / transit_sec;
+
+        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, transit_sec, fps, kbps);
     }
 
     public void statsLogging() {

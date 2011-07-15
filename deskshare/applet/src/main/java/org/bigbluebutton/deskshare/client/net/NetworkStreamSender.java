@@ -25,17 +25,17 @@ import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.common.Dimension;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 
 @ThreadSafe
 public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamListener {
 
     public static final String NAME = "NETWORKSTREAMSENDER: ";
     private ExecutorService executor;
-    private final BlockingQueue<Message> blockDataQ = new LinkedBlockingQueue<Message>();
+    private final BlockingQueue<Message> blockDataQ;
     private final int numThreads;
     private final String host;
     private final int port;
@@ -54,6 +54,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
 
     public NetworkStreamSender(BlockManager blockManager, String host, int port,
         String room, Dimension screenDim, Dimension blockDim, boolean httpTunnel) {
+        blockDataQ = new ArrayBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
 
         this.blockManager = blockManager;
         this.host = host;
@@ -139,7 +140,14 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     }
 
     public void send(Message message) {
-        blockDataQ.offer(message);
+        int size = blockDataQ.size();
+        if(size > 0 ){
+            System.out.println("Pending Messages: " + size);
+        }
+
+        while(!blockDataQ.offer(message)) {
+            blockDataQ.poll();
+        }
     }
 
     public void start() {

@@ -69,6 +69,12 @@ public class NetworkSocketStreamSender implements Runnable {
         System.out.println("NetworkSocketStreamSender: connecting to " + host + ":" + port);
         try {
             socket = new Socket(host, port);
+            socket.setTcpNoDelay(true);
+            socket.setPerformancePreferences(0,1,2);
+            socket.setSendBufferSize(500 * 1024);
+            socket.shutdownInput();
+            System.out.println("Buff Size: " + socket.getSendBufferSize());
+
             outstream = new DataOutputStream(socket.getOutputStream());
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -112,6 +118,7 @@ public class NetworkSocketStreamSender implements Runnable {
         if (outstream != null) {
 	    long start = System.currentTimeMillis();
             outstream.write(header);
+            outstream.flush();
 	    long finish = System.currentTimeMillis();
 	    ssi.incrBytesSent(header.length);
 	    ssi.incTransitTime(finish - start);
@@ -122,6 +129,7 @@ public class NetworkSocketStreamSender implements Runnable {
         if (outstream != null) {
 	    long start = System.currentTimeMillis();
             dataToSend.writeTo(outstream);
+            outstream.flush();
 	    long finish = System.currentTimeMillis();
 	    ssi.incrBytesSent(dataToSend.size());
 	    ssi.incTransitTime(finish - start);
@@ -201,6 +209,7 @@ public class NetworkSocketStreamSender implements Runnable {
         }
             
         try {
+            outstream.flush();
             outstream.close();
             outstream = null;
             socket.close();

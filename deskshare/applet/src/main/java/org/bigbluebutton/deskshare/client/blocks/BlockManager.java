@@ -35,6 +35,7 @@ public class BlockManager {
     private final Map<Integer, Block> blocksMap;
     private int numColumns;
     private int numRows;
+    private int totalBlocks;
 
     private ChangedBlocksListener listeners;
     private Dimension screenDim, blockDim;
@@ -51,6 +52,7 @@ public class BlockManager {
 
         numColumns = factory.getColumnCount();
         numRows = factory.getRowCount();
+        totalBlocks = numColumns * numRows;
 
         for (int position = 1; position <= getBlockCount(); position++) {
             Block block = factory.createBlock(position);
@@ -61,10 +63,8 @@ public class BlockManager {
     public void processCapturedScreen(BufferedImage capturedScreen) {
         Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
         int changedCount = changedBlocks.size();
-        //System.out.println("Changed Blocks: " + changedCount);
         if (changedCount > 0) {
-//	    TODO move maximum message size to SSI
-            partitionBlockMessages(changedBlocks, numColumns);
+            partitionBlockMessages(changedBlocks, totalBlocks / ScreenShareInfo.NETWORK_SENDER_COUNT);
         }
     }
 
