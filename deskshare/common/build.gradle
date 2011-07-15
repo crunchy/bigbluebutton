@@ -1,5 +1,3 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-
+usePlugin 'java'
 version = '0.71'
 archivesBaseName = 'bbb-deskshare-common'
