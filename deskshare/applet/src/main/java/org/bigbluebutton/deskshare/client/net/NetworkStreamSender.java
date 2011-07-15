@@ -140,10 +140,10 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     }
 
     public void send(Message message) {
-        int size = blockDataQ.size();
-        if(size > 0 ){
-            System.out.println("Pending Messages: " + size);
-        }
+//        int size = blockDataQ.size();
+//        if(size > 0 ){
+//            System.out.println("Pending Messages: " + size);
+//        }
 
         while(!blockDataQ.offer(message)) {
             blockDataQ.poll();
