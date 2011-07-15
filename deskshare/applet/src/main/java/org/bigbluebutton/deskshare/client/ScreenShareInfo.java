@@ -54,6 +54,8 @@ public class ScreenShareInfo {
     public static Container contentPane;
     public static Dimension blockSize = new Dimension(64, 64);
     public static final int MAX_WIDTH = 1280;
+    public static final int IDEAL_PAUSE_DURATION = 100;
+    public static final int MAX_PAUSE_DURATION = 120;
     public static final int NETWORK_SENDER_COUNT = Runtime.getRuntime().availableProcessors();
     public static final int MAX_QUEUED_MESSAGES = NETWORK_SENDER_COUNT * 2;
     
