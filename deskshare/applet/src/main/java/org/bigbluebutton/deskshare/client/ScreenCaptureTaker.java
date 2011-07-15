@@ -35,88 +35,102 @@ public class ScreenCaptureTaker {
 
     private volatile boolean startCapture = false;
     private final Executor screenCapTakerExec = Executors.newSingleThreadExecutor();
+    private int pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
+    private final int PAUSE_DURATION_RECOMPUTE_FREQUENCY = 25; // recompute pause duration every x frames
 
     public ScreenCaptureTaker(ScreenCapture capture) {
-    	this.capture = capture;
-	this.filters = new Vector<SimpleFilter>();
-	this.listeners = new Vector<ScreenCaptureListener>();
+        this.capture = capture;
+        this.filters = new Vector<SimpleFilter>();
+        this.listeners = new Vector<ScreenCaptureListener>();
     }
 
     public void setCaptureCoordinates(int x, int y) {
-	capture.setLocation(x, y);
+        capture.setLocation(x, y);
     }
 
     private long captureScreen() {
-	long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-	BufferedImage image = capture.takeSingleSnapshot();
+        BufferedImage image = capture.takeSingleSnapshot();
 
-	for (SimpleFilter filter : filters) {
-	    image = filter.filter(image);
-	}
+        for (SimpleFilter filter : filters) {
+            image = filter.filter(image);
+        }
 
-	long duration = System.currentTimeMillis() - start;
+        long duration = System.currentTimeMillis() - start;
 
-	notifyListeners(image);
-	return duration;
+        notifyListeners(image);
+        return duration;
     }
 
     private void notifyListeners(BufferedImage image) {
-	for(ScreenCaptureListener listener: listeners) {
-		listener.onScreenCaptured(image);
-	}
+        for(ScreenCaptureListener listener: listeners) {
+                listener.onScreenCaptured(image);
+        }
     }
 
     public void addListener(ScreenCaptureListener listener) {
-	listeners.add(listener);
+        listeners.add(listener);
     }
 
     public void addFilter(SimpleFilter filter) {
-	filters.add(filter);
+        filters.add(filter);
     }
 
     private void pause(int dur) {
-	try {
-	    Thread.sleep(dur);
-	} catch (Exception e) {
-	    System.out.println("Exception sleeping.");
-	}
+        try {
+            Thread.sleep(dur);
+        } catch (Exception e) {
+            System.out.println("Exception sleeping.");
+        }
     }
 
     public void start() {
-	// System.out.println("Starting screen capture.");
-	startCapture = true;
-	Runnable screenCapRunner = new Runnable() {
-	    public void run() {
-		// manually adjust the pause depending on how long it takes to capture
-		// but not too often (once every 100 frames)
-		// the idea is to capture as often as possible to hit some FPS
-		// all durations in ms
-		long captureDuration = 0;
-		int cycle = 0;  // when this reaches 100, re-examine the pause duration
-		int pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
+        // System.out.println("Starting screen capture.");
+        startCapture = true;
+        Runnable screenCapRunner = new Runnable() {
+            public void run() {
+                // adjust the pause depending on how long it takes to capture
+                // but not too often (once every 100 frames)
+                // the idea is to capture as often as possible to hit some FPS
+                // all durations in ms
+                long captureDuration = 0;
+                int cycle = 0;  // when this reaches PAUSE_DURATION_RECOMPUTE_FREQUENCY, re-examine the pause duration
+                pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
 
-		while (startCapture) {
-		    captureDuration = captureScreen();
-		    pause(pauseDuration);
-		    if (++cycle >= 100) {
-			cycle = 0;
-			if (captureDuration + pauseDuration >
-			    ScreenShareInfo.MAX_PAUSE_DURATION) {
-			    pauseDuration = Math.max(10,
-				(int) (ScreenShareInfo.MAX_PAUSE_DURATION - captureDuration)); // at least 10
-			} else {
-			    pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
-			}
-		    }
-		}
-		// System.out.println("Stopping screen capture.");
-	    }
-	};
-	screenCapTakerExec.execute(screenCapRunner);
+                while (startCapture) {
+                    captureDuration = captureScreen();
+                    pause(pauseDuration);
+                    if (++cycle >= PAUSE_DURATION_RECOMPUTE_FREQUENCY) {
+                        // evaluate the queue size and see if we need to adjust the pause
+                        cycle = 0;
+                        recomputePauseDuration(captureDuration);
+                    }
+                }
+                // System.out.println("Stopping screen capture.");
+            }
+        };
+        screenCapTakerExec.execute(screenCapRunner);
     }
 
+    public int recomputePauseDuration(long captureDuration) {
+        if (captureDuration + pauseDuration > ScreenShareInfo.MAX_PAUSE_DURATION) {
+            pauseDuration = Math.max(10,
+                (int) (ScreenShareInfo.MAX_PAUSE_DURATION - captureDuration)); // at least 10
+        } else {
+            pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
+        }
+        return pauseDuration;
+    }
+    
+    public int recomputePauseDurationForQueue(int queueSize) {
+        // let's make pauseDuration 20% longer for now
+        pauseDuration = Math.min(ScreenShareInfo.MAX_PAUSE_DURATION, (int)(pauseDuration * 1.2));
+        System.out.println("New pause duration is " + pauseDuration);
+        return pauseDuration;
+    }
+    
     public void stop() {
-	startCapture = false;
+        startCapture = false;
     }
 }

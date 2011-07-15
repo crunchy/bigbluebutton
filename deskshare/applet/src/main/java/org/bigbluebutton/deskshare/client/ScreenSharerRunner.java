@@ -21,6 +21,7 @@
  */
 package org.bigbluebutton.deskshare.client;
 
+import org.bigbluebutton.deskshare.client.QueueListenerImp;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.client.blocks.ChangedBlocksListener;
 import org.bigbluebutton.deskshare.client.image_filters.ChangeTypeFilter;
@@ -34,7 +35,8 @@ import org.bigbluebutton.deskshare.common.Dimension;
 import java.awt.image.BufferedImage;
 
 public class ScreenSharerRunner implements ScreenCaptureListener {
-    private static final String LICENSE_HEADER = "This program is free software: you can redistribute it and/or modify\n" +
+    private static final String LICENSE_HEADER = 
+        "This program is free software: you can redistribute it and/or modify\n" +
         "it under the terms of the GNU Lesser General Public License as published by\n" +
         "the Free Software Foundation, either version 3 of the License, or\n" +
         "(at your option) any later version.\n\n" +
@@ -85,7 +87,6 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
             mouseLocTaker = new MouseLocationTaker(ssi.captureWidth, ssi.captureHeight, ssi.scaleWidth, ssi.scaleHeight, ssi.x, ssi.y);
         }
 
-
         // Use the scaleWidth and scaleHeight as the dimension we pass to the BlockManager.
         // If there is no scaling required, the scaleWidth and scaleHeight will be the same as
         // captureWidth and captureHeight (ritzalam 05/27/2010)
@@ -95,17 +96,22 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         blockManager.initialize(screenDim, tileDim);
 
         sender = new NetworkStreamSender(blockManager, ssi.host, ssi.port, ssi.room, screenDim, tileDim, ssi.httpTunnel);
+        QueueListener queueListener = new QueueListenerImp(captureTaker);
+        sender.addQueueListener(queueListener);
     }
 
     public void startSharing() {
         connected = sender.connect();
         if (connected) {
             ssi.setStartTime(System.currentTimeMillis());
+            
+            // set listeners
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
             blockManager.addListener(changedBlocksListener);
 
             ScreenCaptureListener screenCapListener = new ScreenCaptureListenerImp(blockManager);
             captureTaker.addListener(screenCapListener);
+            
             captureTaker.start();
 
             sender.start();
@@ -171,6 +177,6 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
     @Override
     public void onScreenCaptured(BufferedImage screen) {
-	ssi.incFramesCaptured(1);
+        ssi.incFramesCaptured(1);
     }
 }

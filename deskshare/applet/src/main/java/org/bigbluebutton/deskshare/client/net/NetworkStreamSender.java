@@ -20,6 +20,8 @@
 package org.bigbluebutton.deskshare.client.net;
 
 import net.jcip.annotations.ThreadSafe;
+
+import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ExitCode;
 import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
@@ -50,6 +52,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     private Dimension blockDim;
     private BlockManager blockManager;
     private NetworkConnectionListener listener;
+    private QueueListener queueListener;
     private final SequenceNumberGenerator seqNumGenerator = new SequenceNumberGenerator();
 
     public NetworkStreamSender(BlockManager blockManager, String host, int port,
@@ -65,7 +68,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         this.httpTunnel = httpTunnel;
 
 
-	numThreads = ScreenShareInfo.NETWORK_SENDER_COUNT;
+        numThreads = ScreenShareInfo.NETWORK_SENDER_COUNT;
         System.out.println(NAME + "Starting up " + numThreads + " sender threads.");
         executor = Executors.newFixedThreadPool(numThreads);
     }
@@ -73,10 +76,20 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     public void addNetworkConnectionListener(NetworkConnectionListener listener) {
         this.listener = listener;
     }
+    
+    public void addQueueListener(QueueListener queueListener) {
+        this.queueListener = queueListener;
+    }
 
     private void notifyNetworkConnectionListener(ExitCode reason) {
         if (listener != null) {
             listener.networkConnectionException(reason);
+        }
+    }
+    
+    private void notifyQueueListener(int queueSize) {
+        if (queueListener != null) {
+            queueListener.onQueueBackedup(queueSize);
         }
     }
 
@@ -140,11 +153,15 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     }
 
     public void send(Message message) {
-//        int size = blockDataQ.size();
-//        if(size > 0 ){
-//            System.out.println("Pending Messages: " + size);
-//        }
-
+        int size = blockDataQ.size();
+        //if (size > 0) {
+            // System.out.println("Pending Messages: " + size);
+            //ScreenShareInfo.setBlockDataQueueSize(blockDataQ.size());
+        if (size > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
+            System.out.println("calling notifyQueueListener");
+            notifyQueueListener(size);
+        }
+        
         while(!blockDataQ.offer(message)) {
             blockDataQ.poll();
         }
