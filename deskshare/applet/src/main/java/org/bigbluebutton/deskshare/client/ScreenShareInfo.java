@@ -22,7 +22,6 @@
 package org.bigbluebutton.deskshare.client;
 
 import org.bigbluebutton.deskshare.common.Dimension;
-import org.bigbluebutton.deskshare.client.DeskShareAppletSettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -77,12 +76,10 @@ public class ScreenShareInfo {
     private AtomicInteger bytesSent = new AtomicInteger();
     private AtomicInteger blocksSent = new AtomicInteger();
     private AtomicInteger messagesSent = new AtomicInteger();
-    private AtomicLong transitTime = new AtomicLong();
 
     private AtomicLong timeStarted = new AtomicLong();
 
-    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; transit s: %,.3f\n" +
-            "fps: %.2f; kbps: %.3f\n";
+    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; fps: %.2f; \n";
     private static final long STATS_INTERVAL = 2000;
 
     private ScreenShareInfo() {
@@ -247,10 +244,6 @@ public class ScreenShareInfo {
         framesCaptured.addAndGet(frames);
     }
 
-    public void incTransitTime(long ms) {
-        transitTime.addAndGet(ms);
-    }
-
     public void statsLogging() {
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -277,9 +270,6 @@ public class ScreenShareInfo {
         int frames = framesCaptured.get();
         float fps = frames / duration;
         float kB  = bytesSent.get() / 1024F;
-        float transit_sec = transitTime.get() / 1000;
-        float kbps = (kB * 8) / transit_sec;
-
-        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, transit_sec, fps, kbps);
+        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, fps);
     }
 }
