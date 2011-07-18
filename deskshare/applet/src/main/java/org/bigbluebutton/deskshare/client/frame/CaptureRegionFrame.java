@@ -26,14 +26,16 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import org.bigbluebutton.deskshare.client.DeskShareAppletSettings;
 import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 
 public class CaptureRegionFrame {
     private static final long serialVersionUID = 1L;
 
     private Button btnStartStop;
-    private JComboBox colorDepthSelect, keyframeThresholdSelect;
+    //private JComboBox colorDepthSelect, keyframeThresholdSelect;
     private JLabel windowSizeLabel;
+    /*
     private final String[] colorDepthNames = { 
         "TYPE_BYTE_BINARY",
         "TYPE_BYTE_GRAY",
@@ -47,7 +49,7 @@ public class CaptureRegionFrame {
         "TYPE_INT_RGB",
         "TYPE_4BYTE_ABGR",
         "TYPE_INT_ARGB_PRE",
-        "TYPE_INT_ARGB",
+        "TYPE_INT_ARGB"
     };
     private final int colorDepthSelectedIndex = 2;
     private final int[] colorDepthValues = {
@@ -63,7 +65,7 @@ public class CaptureRegionFrame {
         BufferedImage.TYPE_INT_RGB,
         BufferedImage.TYPE_4BYTE_ABGR,
         BufferedImage.TYPE_INT_ARGB_PRE,
-        BufferedImage.TYPE_INT_ARGB,
+        BufferedImage.TYPE_INT_ARGB
     };
     private final String[] keyframeThresholdNames = {
         "10%",
@@ -77,6 +79,21 @@ public class CaptureRegionFrame {
         "90%"
     };
     private final int keyframeThresholdSelectedIndex = 3;
+    */
+    private JComboBox presetSelect;
+    private final String[] presetNames = { 
+        "Low keyframe, low color (default)",
+        "Low keyframe, high color",
+        "High keyframe, low color",
+        "High keyframe, high color"
+    };
+    private final int presetNamesSelectedIndex = 0;
+    private final DeskShareAppletSettings.Preset[] presetNamesValues = {
+        DeskShareAppletSettings.Preset.LOW_KEYFRAME_LOW_COLOR,
+        DeskShareAppletSettings.Preset.LOW_KEYFRAME_HIGH_COLOR,
+        DeskShareAppletSettings.Preset.HIGH_KEYFRAME_LOW_COLOR,
+        DeskShareAppletSettings.Preset.HIGH_KEYFRAME_HIGH_COLOR
+    };
 
     private CaptureRegionListener client;
     private boolean capturing = false;
@@ -129,6 +146,7 @@ public class CaptureRegionFrame {
         panel.add(btnStartStop);
         
         // pulldown menus
+        /*
         colorDepthSelect = new JComboBox(colorDepthNames);
         colorDepthSelect.setSelectedIndex(colorDepthSelectedIndex);
         colorDepthSelect.addActionListener(new ActionListener() {
@@ -149,6 +167,18 @@ public class CaptureRegionFrame {
             }
         });
         panel.add(keyframeThresholdSelect);
+        */
+        
+        presetSelect = new JComboBox(presetNames);
+        presetSelect.setSelectedIndex(presetNamesSelectedIndex);
+        presetSelect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ScreenShareInfo.setSettings(new DeskShareAppletSettings(presetNamesValues[presetSelect.getSelectedIndex()]));
+            }
+        });
+        panel.add(presetSelect);
+        
         
         windowSizeLabel = new JLabel("Window size will go here");
         panel.add(windowSizeLabel);

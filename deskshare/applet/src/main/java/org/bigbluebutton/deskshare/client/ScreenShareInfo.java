@@ -22,6 +22,7 @@
 package org.bigbluebutton.deskshare.client;
 
 import org.bigbluebutton.deskshare.common.Dimension;
+import org.bigbluebutton.deskshare.client.DeskShareAppletSettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -65,6 +66,7 @@ public class ScreenShareInfo {
     private static ScreenShareInfo instance;
     private static double keyframeTriggerThreshold = 0.4;
     private static int colorDepth = BufferedImage.TYPE_USHORT_555_RGB;
+    private static DeskShareAppletSettings settings;
     
     // to increase/decrease color depth
     private static final int NUM_COLOR_DEPTHS = 13;
@@ -110,6 +112,22 @@ public class ScreenShareInfo {
         return instance;
     }
 
+    public static ScreenShareInfo getInstance(DeskShareAppletSettings preset) {
+        if (instance == null) {
+            instance = new ScreenShareInfo();
+        }
+        setSettings(preset);
+        return instance;
+    }
+    
+    /************************************
+     * settings all at once
+    ************************************/
+    public static void setSettings(DeskShareAppletSettings preset) {
+        setColorDepth(preset.getColor());
+        setKeyframeTriggerThreshold(preset.getKeyframe());
+    }
+    
     /***********************************
      * color depth accessors
     ************************************/
