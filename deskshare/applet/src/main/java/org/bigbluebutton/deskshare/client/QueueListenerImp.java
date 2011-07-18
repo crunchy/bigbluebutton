@@ -34,8 +34,7 @@ public class QueueListenerImp implements QueueListener {
     
     @Override
     public void onQueueBackedup(int queueSize) {
-        System.out.println("Notifying capture taker to recompute its frequency");
+        //System.out.println("Notifying capture taker to recompute its frequency");
         captureTaker.recomputePauseDurationForQueue(queueSize);
     }
-
 }
