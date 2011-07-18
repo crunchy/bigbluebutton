@@ -128,7 +128,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                 try {
                     stop();
                 } catch (ConnectionException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 return false;
@@ -154,9 +153,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
 
     public void send(Message message) {
         int size = blockDataQ.size();
-        //if (size > 0) {
-            // System.out.println("Pending Messages: " + size);
-            //ScreenShareInfo.setBlockDataQueueSize(blockDataQ.size());
+
         if (size > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
             System.out.println("calling notifyQueueListener");
             notifyQueueListener(size);
