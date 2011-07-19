@@ -167,8 +167,7 @@ public class CaptureRegionFrame {
             }
         });
         panel.add(keyframeThresholdSelect);
-        */
-        
+*/        
         presetSelect = new JComboBox(presetNames);
         presetSelect.setSelectedIndex(presetNamesSelectedIndex);
         presetSelect.addActionListener(new ActionListener() {
@@ -178,11 +177,9 @@ public class CaptureRegionFrame {
             }
         });
         panel.add(presetSelect);
-        
-        
         windowSizeLabel = new JLabel("Window size will go here");
-        panel.add(windowSizeLabel);
-
+        panel.add(windowSizeLabel); 
+        
         return panel;
     }
     
