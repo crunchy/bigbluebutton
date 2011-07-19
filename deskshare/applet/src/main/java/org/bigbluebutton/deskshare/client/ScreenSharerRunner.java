@@ -124,8 +124,8 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
             started = true;
 
-	    if(ssi.statsLogging) {
-		ssi.statsLogging();
+	    if(ScreenShareInfo.statsLogging) {
+		ScreenShareInfo.statsLogging();
 	    }
 
         } else {
@@ -139,6 +139,8 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         tray.removeIconFromSystemTray();
         captureTaker.stop();
         mouseLocTaker.stop();
+        ScreenShareInfo.stopStatsLogging();
+        // stop logging
         if (connected && started) {
             try {
                 sender.stop();

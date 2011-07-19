@@ -58,8 +58,9 @@ public class ScreenShareInfo {
     public static final int MAX_PAUSE_DURATION = 250;
     public static final int NETWORK_SENDER_COUNT = 1;
     public static final int MAX_QUEUED_MESSAGES = 20;
-    // decrease screenshot frequency if queue > this
-    public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 10; 
+    // decrease screenshot frequency if queue (in blocks) > this
+    public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 50; 
+    public static boolean purgeBackedUpQueue = true;
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
@@ -72,12 +73,13 @@ public class ScreenShareInfo {
     private static ArrayList<Integer> orderedColorDepths;
     private static int colorDepthIndex = 0;
 
-    private AtomicInteger framesCaptured = new AtomicInteger();
-    private AtomicInteger bytesSent = new AtomicInteger();
-    private AtomicInteger blocksSent = new AtomicInteger();
-    private AtomicInteger messagesSent = new AtomicInteger();
+    private static AtomicInteger framesCaptured = new AtomicInteger();
+    private static AtomicInteger bytesSent = new AtomicInteger();
+    private static AtomicInteger blocksSent = new AtomicInteger();
+    private static AtomicInteger messagesSent = new AtomicInteger();
 
-    private AtomicLong timeStarted = new AtomicLong();
+    private static AtomicLong timeStarted = new AtomicLong();
+    private static Timer timer;
 
     private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; fps: %.2f; \n";
     private static final long STATS_INTERVAL = 2000;
@@ -220,6 +222,17 @@ public class ScreenShareInfo {
         System.out.println("New keyframe threshold set to " + t + "\n" + asString());
         return getInstance();
     }
+    
+    /**********************************
+     * misc performance tweaks
+    ***********************************/
+    public static boolean getPurgeBackedUpQueue() {
+        return purgeBackedUpQueue;
+    }
+    
+    public static void setPurgeBackedUpQueue(boolean purge) {
+        purgeBackedUpQueue = purge;
+    }
 
     /***************************************
      * stats logging
@@ -244,14 +257,20 @@ public class ScreenShareInfo {
         framesCaptured.addAndGet(frames);
     }
 
-    public void statsLogging() {
-        Timer timer = new Timer(true);
+    public static void statsLogging() {
+        timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 printStats();
             }
         }, STATS_INTERVAL, STATS_INTERVAL);
+    }
+    
+    public static void stopStatsLogging() {
+        if (timer != null) {
+            timer.cancel();
+        }
     }
     
     /*****************************
@@ -265,7 +284,7 @@ public class ScreenShareInfo {
         return sb.toString();
     }
     
-    public void printStats(){
+    public static void printStats(){
         float duration = (System.currentTimeMillis() - timeStarted.get()) / 1000F;
         int frames = framesCaptured.get();
         float fps = frames / duration;
