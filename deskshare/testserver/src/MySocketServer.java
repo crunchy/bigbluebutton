@@ -26,7 +26,7 @@ public class MySocketServer {
 		float secs = ((System.currentTimeMillis() - start)/1000F);
 		float kb   = bytes/1024F;
 		float rate = kb/secs;
-		System.out.println("recv: " + kb + " kbytes; kbytes/s: " + rate);
+		System.out.println("recv: " + size/1024F + " kbytes; kbytes/s: " + rate);
 	    }
 	}
     }
