@@ -92,18 +92,16 @@ public class ScreenCaptureTaker {
             public void run() {
                 // adjust the pause depending on how long it takes to capture
                 // but not too often (once every 100 frames)
-                // the idea is to capture as often as possible to hit some FPS
                 // all durations in ms
                 long captureDuration = 0;
-                int cycle = 0;  // when this reaches PAUSE_DURATION_RECOMPUTE_FREQUENCY, re-examine the pause duration
+                // when this reaches PAUSE_DURATION_RECOMPUTE_FREQUENCY, re-examine the pause duration
+                int capturesBeforeRecompute = 0;  
                 pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
-
                 while (startCapture) {
                     captureDuration = captureScreen();
                     pause(pauseDuration);
-                    if (++cycle >= PAUSE_DURATION_RECOMPUTE_FREQUENCY) {
-                        // evaluate the queue size and see if we need to adjust the pause
-                        cycle = 0;
+                    if (++capturesBeforeRecompute >= PAUSE_DURATION_RECOMPUTE_FREQUENCY) {
+                        capturesBeforeRecompute = 0;
                         recomputePauseDuration(captureDuration);
                     }
                 }
@@ -123,7 +121,7 @@ public class ScreenCaptureTaker {
         return pauseDuration;
     }
     
-    public int recomputePauseDurationForQueue(int queueSize) {
+    public int recomputePauseDurationForQueue(int queueSizeInBlocks) {
         // let's make pauseDuration 20% longer for now
         pauseDuration = Math.min(ScreenShareInfo.MAX_PAUSE_DURATION, (int)(pauseDuration * 1.2));
         System.out.println("New pause duration is " + pauseDuration);
