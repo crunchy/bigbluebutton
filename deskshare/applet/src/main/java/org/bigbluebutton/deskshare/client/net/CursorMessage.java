@@ -43,4 +43,14 @@ public class CursorMessage implements Message {
 	public String getRoom() {
 		return room;
 	}
+        
+        @Override
+        public boolean isBlockMessage() {
+            return false;
+        }
+        
+        @Override
+        public boolean isCursorMessage() {
+            return true;
+        }
 }

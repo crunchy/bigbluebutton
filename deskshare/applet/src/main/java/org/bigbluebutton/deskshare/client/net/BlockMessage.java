@@ -21,30 +21,90 @@
 */
 package org.bigbluebutton.deskshare.client.net;
 
+import java.util.Arrays;
+
 public class BlockMessage implements Message {
 
-	private Integer[] blocks;
-        private boolean forceKeyFrame;
-	
-	public BlockMessage(Integer[] blocks) {
-		this.blocks = blocks;
-	}
+    private Integer[] blocks;
+    private boolean forceKeyFrame;
+    
+    public BlockMessage(Integer[] blocks) {
+        setBlocks(blocks);
+        forceKeyFrame = false;
+    }
 
-	public BlockMessage(Integer[] blocks, boolean fkf) {
-            this.blocks = blocks;
-            this.forceKeyFrame = fkf;
-	}
-	
-	@Override
-	public MessageType getMessageType() {
-		return MessageType.BLOCK;
-	}
-
-	public Integer[] getBlocks() {
-		return blocks;
-	}
-        
-        public boolean getForceKeyFrame() {
-            return forceKeyFrame;
+    public BlockMessage(Integer[] blocks, boolean fkf) {
+        setBlocks(blocks);
+        forceKeyFrame = fkf;
+    }
+    /**
+     * sets blocks and sorts them
+     * sorted is crucial; removing the sort will break other methods
+    */
+    public void setBlocks(Integer[] blocks) {
+        this.blocks = blocks;
+        Arrays.sort(this.blocks);
+    }
+    
+    public boolean discardBlock(int at) {
+        if (at < 0 || at >= this.blocks.length) {
+            return false;
         }
+        Integer[] tmp = new Integer[blocks.length - 1];
+        System.arraycopy(blocks, 0, tmp, 0, at);
+        if (blocks.length != at) {
+            System.arraycopy(
+                blocks, at+1, 
+                tmp, at, 
+                blocks.length - at - 1);
+        }
+        setBlocks(tmp);
+        return true;
+    }
+    
+    public boolean discardBlockByValue(int value) {
+        boolean result = false;
+        synchronized(blocks) {
+            int index = Arrays.binarySearch(blocks, new Integer(value));
+            if (index >= 0) {
+                result = discardBlock(index);
+            }
+        }
+        return result;
+    }
+    
+    @Override
+    public MessageType getMessageType() {
+        return MessageType.BLOCK;
+    }
+
+    @Override
+    public boolean isBlockMessage() {
+        return true;
+    }
+    
+    @Override
+    public boolean isCursorMessage() {
+        return false;
+    }
+
+    public Integer[] getBlocks() {
+        return blocks;
+    }
+    
+    public int size() {
+        return blocks.length;
+    }
+    
+    public boolean getForceKeyFrame() {
+        return forceKeyFrame;
+    }
+    
+    /**
+     * @returns true if another message has the same blocks as this
+     * depends on the blocks being sorted in setBlocks
+    */
+    public boolean hasSameBlocksAs(BlockMessage that) {
+        return Arrays.equals(this.blocks, that.getBlocks());
+    }
 }
