@@ -61,43 +61,49 @@ public class BlockManager {
     }
 
     public void processCapturedScreen(BufferedImage capturedScreen) {
-        Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen);
+        Vector<Integer> changedBlocks = getChangedBlocks(capturedScreen, false);
+        boolean forceKeyFrame = false;
         int changedCount = changedBlocks.size();
         if (changedCount > 0) {
-            partitionBlockMessages(changedBlocks, totalBlocks / ScreenShareInfo.NETWORK_SENDER_COUNT);
+            int numberOfBlocks = getBlockCount();
+            if (numberOfBlocks > 0) {
+                double pctChanged = (double)changedCount / numberOfBlocks;
+                if (pctChanged > ScreenShareInfo.getKeyframeTriggerThreshold()) {
+                    forceKeyFrame = true;
+                    System.out.println(100 * pctChanged + "% blocks changed ********");
+                    // mark all the blocks as changed
+                    changedBlocks = getChangedBlocks(capturedScreen, true);
+                }
+            }
+            // chunk up the refresh
+            partitionBlockMessages(changedBlocks, totalBlocks / ScreenShareInfo.NETWORK_SENDER_COUNT, forceKeyFrame);
         }
     }
 
-    private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen) {
+    private Vector<Integer> getChangedBlocks(BufferedImage capturedScreen, boolean forceAllBlocks) {
         Vector<Integer> changedBlocks = new Vector<Integer>();
     
         for (int position = getBlockCount(); position >= 1; position--) {
-            Block block = blocksMap.get(position);
-            if (block.hasChanged(capturedScreen)) {
+            // no need to get the block 
+            if (forceAllBlocks || blocksMap.get(position).hasChanged(capturedScreen)) {
                 changedBlocks.add(position);
             }
         }
         return changedBlocks;
     }
 
-    private void partitionBlockMessages(Vector<Integer> changedBlocks, int blocksPerSection) {
+    private void partitionBlockMessages(Vector<Integer> changedBlocks, int blocksPerSection, boolean forceKeyFrame) {
         int changedCount = changedBlocks.size();
-
         List<Integer> section;
         Integer[] bc;
 
-        //System.out.println("Total Changed Blocks: " + changedCount);
-        // force a keyframe if more than some % of blocks have changed to minimize tiling
-        int numberOfBlocks = getBlockCount();
-        boolean forceKeyFrame = false;
-        if (numberOfBlocks > 0) {
-            double pctChanged = (double)changedCount / numberOfBlocks;
-            if (pctChanged > ScreenShareInfo.getKeyframeTriggerThreshold()) {
-                forceKeyFrame = true;
-                System.out.println(100 * pctChanged + "% blocks changed");
-            }
-        }
-
+        // nudge # blocks per section; if not, when sending keyframes, 
+        // you wind up partitioning into two sections, and the 2nd one is tiny 
+        // (always 44 bytes in my test). There's no risk of overflow b/c the
+        // offset is bounded by changedCount in the loop
+        // I don't quite understand this yet
+        ++blocksPerSection;
+        
         for (int start = 0; start <= changedCount; start += blocksPerSection) {
             int offset = start + blocksPerSection;
 
@@ -109,9 +115,6 @@ public class BlockManager {
 
             bc = new Integer[section.size()];
             section.toArray(bc);
-
-            //System.out.println("Notifying Changed Blocks: " + section.size());
-
             notifyChangedBlockListener(new BlockMessage(bc, forceKeyFrame));
         }
     }
@@ -120,13 +123,12 @@ public class BlockManager {
         listeners.onChangedBlock(position);
     }
 
-
     public void addListener(ChangedBlocksListener listener) {
         listeners = listener;
     }
 
     public void removeListener(ChangedBlocksListener listener) {
-    listeners = null;
+        listeners = null;
     }
 
     public void blockSent(int position) {
