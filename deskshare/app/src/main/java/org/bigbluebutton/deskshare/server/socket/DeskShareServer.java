@@ -24,7 +24,6 @@ package org.bigbluebutton.deskshare.server.socket;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.red5.logging.Red5LoggerFactory;
@@ -50,7 +49,6 @@ public class DeskShareServer {
 	config.setIdleTime(IdleStatus.BOTH_IDLE, 10);
 	config.setReceiveBufferSize(RECEIVE_BUFFER_SIZE);
 
-	acceptor.getFilterChain().addFirst("logger", new LoggingFilter());
 	acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ScreenCaptureProtocolCodecFactory()));
 	acceptor.setHandler(screenCaptureHandler);
 
