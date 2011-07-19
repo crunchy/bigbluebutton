@@ -24,4 +24,8 @@ public interface Message {
     public enum MessageType {BLOCK, CURSOR}
 
     public MessageType getMessageType();
+    
+    public boolean isBlockMessage();
+    
+    public boolean isCursorMessage();
 }
