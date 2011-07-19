@@ -55,11 +55,11 @@ public class ScreenShareInfo {
     public static Dimension blockSize = new Dimension(64, 64);
     public static final int MAX_WIDTH = 1280;
     public static final int IDEAL_PAUSE_DURATION = 100;
-    public static final int MAX_PAUSE_DURATION = 120;
+    public static final int MAX_PAUSE_DURATION = 250;
     public static final int NETWORK_SENDER_COUNT = 1;
-    public static final int MAX_QUEUED_MESSAGES = 8;
+    public static final int MAX_QUEUED_MESSAGES = 20;
     // decrease screenshot frequency if queue > this
-    public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 3; 
+    public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 10; 
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;
