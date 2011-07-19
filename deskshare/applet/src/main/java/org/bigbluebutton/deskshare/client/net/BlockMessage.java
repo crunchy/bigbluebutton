@@ -31,8 +31,8 @@ public class BlockMessage implements Message {
 	}
 
 	public BlockMessage(Integer[] blocks, boolean fkf) {
-		this.blocks = blocks;
-                this.forceKeyFrame = fkf;
+            this.blocks = blocks;
+            this.forceKeyFrame = fkf;
 	}
 	
 	@Override
