@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamListener {
 
     public static final String NAME = "NETWORKSTREAMSENDER: ";
+
     private ExecutorService executor;
     private final BlockingQueue<Message> blockDataQ;
     private final int numThreads;
@@ -94,16 +95,27 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     }
 
     public boolean connect() {
-        socketSenders = new NetworkSocketStreamSender[numThreads];
-        int failedAttempts = 0;
-        for (int i = 0; i < numThreads; i++) {
-            try {
-                createSender(i);
-                numRunningThreads++;
-            } catch (ConnectionException e) {
-                failedAttempts++;
-            }
-        }
+	int failedAttempts = 0;
+
+	socketSenders = new NetworkSocketStreamSender[numThreads];
+
+	try {
+		NetworkSocket socket = new NetworkSocket(host, port);
+
+	    for (int i = 0; i < numThreads; i++) {
+		try {
+
+		    createSender(i, socket);
+		    numRunningThreads++;
+		} catch (ConnectionException e) {
+		    failedAttempts++;
+		}
+	    }
+
+	} catch (ConnectionException e) {
+	    e.printStackTrace();
+	    failedAttempts = numThreads;
+	}
 
         if ((failedAttempts == numThreads) && httpTunnel) {
             System.out.println(NAME + "Trying http tunneling");
@@ -139,10 +151,10 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         return false;
     }
 
-    private void createSender(int i) throws ConnectionException {
+    private void createSender(int i, NetworkSocket socket) throws ConnectionException {
         socketSenders[i] = new NetworkSocketStreamSender(i, this, room, screenDim, blockDim, seqNumGenerator);
         socketSenders[i].addListener(this);
-        socketSenders[i].connect(host, port);
+        socketSenders[i].connect(socket);
     }
 
     private void createHttpSender(int i) throws ConnectionException {
@@ -177,7 +189,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                     socketSenders[i].sendStartStreamMessage();
                     executor.execute(socketSenders[i]);
                 } catch (ConnectionException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }

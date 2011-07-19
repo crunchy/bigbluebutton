@@ -66,6 +66,10 @@ public class NetworkSocketStreamSender implements Runnable {
     public void connect(String host, int port) throws ConnectionException {
         socket = new NetworkSocket(host, port);
     }
+
+    public void connect(NetworkSocket networkSocket) {
+    	socket = networkSocket;
+    }
     
     public void sendStartStreamMessage() throws ConnectionException {
         try {
