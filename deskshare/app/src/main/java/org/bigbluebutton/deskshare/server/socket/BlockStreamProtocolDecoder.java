@@ -25,11 +25,11 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
-import org.bigbluebutton.deskshare.common.Dimension;
 import org.bigbluebutton.deskshare.server.events.CaptureEndBlockEvent;
 import org.bigbluebutton.deskshare.server.events.CaptureStartBlockEvent;
 import org.bigbluebutton.deskshare.server.events.CaptureUpdateBlockEvent;
 import org.bigbluebutton.deskshare.server.events.MouseLocationEvent;
+import org.bigbluebutton.deskshare.server.svc1.Dimension;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
@@ -60,7 +60,7 @@ public class BlockStreamProtocolDecoder extends CumulativeProtocolDecoder {
 
 	in.get(header, 0, HEADER.length);
 	int messageLength = in.getInt();
-//    	System.out.println("Message Length " + messageLength);
+
 	if (in.remaining() < messageLength) {
 	    in.position(start);
 	    return false;

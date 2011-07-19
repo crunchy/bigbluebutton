@@ -21,20 +21,19 @@
 */
 package org.bigbluebutton.deskshare.server.servlet;
 
-import java.awt.Point;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.bigbluebutton.deskshare.common.Dimension;
 import org.bigbluebutton.deskshare.server.session.ISessionManagerGateway;
+import org.bigbluebutton.deskshare.server.svc1.Dimension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.Point;
 
 public class HttpTunnelStreamController extends MultiActionController {
 
