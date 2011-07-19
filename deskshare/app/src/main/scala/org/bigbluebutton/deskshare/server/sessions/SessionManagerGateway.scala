@@ -36,6 +36,7 @@ class SessionManagerGateway(streamManager: StreamManager) extends ISessionManage
 	val sessionManager: SessionManagerSVC = new SessionManagerSVC(streamManager)
 	sessionManager.start
 
+
 	def createSession(room: String, screenDim: common.Dimension, blockDim: common.Dimension, seqNum: Int): Unit = {
 		log.info("SessionManagerGateway:createSession for %s", room)
 		sessionManager ! new CreateSession(room, new svc1.Dimension(screenDim.getWidth(), screenDim.getHeight()),
