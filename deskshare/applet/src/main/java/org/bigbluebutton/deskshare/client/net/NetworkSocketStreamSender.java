@@ -26,6 +26,8 @@ import org.bigbluebutton.deskshare.common.Dimension;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class NetworkSocketStreamSender implements Runnable {
     private NetworkSocket socket = null;
@@ -119,42 +121,31 @@ public class NetworkSocketStreamSender implements Runnable {
             processMessages = false;
         }
     }
-    
-    private void processNextMessageToSend(Message message) throws IOException {
-	ssi.incrMessagesSent(1);
-
-        if (message.getMessageType() == Message.MessageType.BLOCK) {
-	    processBlockMessage((BlockMessage) message);
-        } else if (message.getMessageType() == Message.MessageType.CURSOR) {
-	    processCursorMessage((CursorMessage) message);
-        }
-    }
 
     private void processCursorMessage(CursorMessage message) throws IOException {
-	CursorMessage msg = message;
-	sendCursor(msg.getMouseLocation(), msg.getRoom());
+        sendCursor(message.getMouseLocation(), message.getRoom());
     }
 
     private void processBlockMessage(BlockMessage message) throws IOException {
-	ByteArrayOutputStream dataToSend = new ByteArrayOutputStream();
-	dataToSend.reset();
-	BlockStreamProtocolEncoder.encodeRoomAndSequenceNumber(room, seqNumGenerator.getNext(), dataToSend);
+        ByteArrayOutputStream dataToSend = new ByteArrayOutputStream();
+        dataToSend.reset();
+        BlockStreamProtocolEncoder.encodeRoomAndSequenceNumber(room, seqNumGenerator.getNext(), dataToSend);
 
-	Integer[] changedBlocks = message.getBlocks();
+        Integer[] changedBlocks = message.getBlocks();
 
-	BlockStreamProtocolEncoder.numBlocksChanged(changedBlocks.length, dataToSend);
+        BlockStreamProtocolEncoder.numBlocksChanged(changedBlocks.length, dataToSend);
 
-	for (Integer changedBlock : changedBlocks) {
-	    EncodedBlockData block = retriever.getBlockToSend(changedBlock);
-	    BlockVideoData bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), message.getForceKeyFrame());
-	    BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
-	    retriever.blockSent(changedBlock);
-	}
+        for (Integer changedBlock : changedBlocks) {
+            EncodedBlockData block = retriever.getBlockToSend(changedBlock);
+            BlockVideoData bv = new BlockVideoData(room, block.getPosition(), block.getVideoData(), message.getForceKeyFrame());
+            BlockStreamProtocolEncoder.encodeBlock(bv, dataToSend);
+            retriever.blockSent(changedBlock);
+        }
 
-	ssi.incrBlocksSent(changedBlocks.length);
+        ssi.incrBlocksSent(changedBlocks.length);
 
-	sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
-	sendToStream(dataToSend);
+        sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
+        sendToStream(dataToSend);
     }
 
     public void run() {
@@ -164,7 +155,17 @@ public class NetworkSocketStreamSender implements Runnable {
             Message message;
             try {
                 message = retriever.getNextMessageToSend();
-                processNextMessageToSend(message);
+                ssi.incrMessagesSent(1);
+                switch(message.getMessageType()) {
+                    case BLOCK:
+                        processBlockMessage((BlockMessage)message);
+                        break;
+                    case CURSOR:
+                        processCursorMessage((CursorMessage)message);
+                        break;
+                    default:
+                        // ignore
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {
