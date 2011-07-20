@@ -58,6 +58,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
     private NetworkStreamSender sender;
 
     private static ScreenShareInfo ssi;
+    private static PerformanceStats perfStats;
 
     private DeskshareSystemTray tray = new DeskshareSystemTray();
     private ClientListener listener;
@@ -65,6 +66,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
     public ScreenSharerRunner() {
         ssi = ScreenShareInfo.getInstance();
+        
         ScreenCapture capture = new ScreenCapture(ssi.x, ssi.y, ssi.captureWidth, ssi.captureHeight);
 
         captureTaker = new ScreenCaptureTaker(capture);
@@ -98,12 +100,15 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         sender = new NetworkStreamSender(blockManager, ssi.host, ssi.port, ssi.room, screenDim, tileDim, ssi.httpTunnel);
         QueueListener queueListener = new QueueListenerImp(captureTaker);
         sender.addQueueListener(queueListener);
+        
+        // log stats
+        perfStats = PerformanceStats.getInstance();
     }
 
     public void startSharing() {
         connected = sender.connect();
         if (connected) {
-            ssi.setStartTime(System.currentTimeMillis());
+            perfStats.setStartTime(System.currentTimeMillis());
             
             // set listeners
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
@@ -125,7 +130,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
             started = true;
 
 	    if(ScreenShareInfo.statsLogging) {
-		ScreenShareInfo.statsLogging();
+		PerformanceStats.start();
 	    }
 
         } else {
@@ -139,7 +144,7 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         tray.removeIconFromSystemTray();
         captureTaker.stop();
         mouseLocTaker.stop();
-        ScreenShareInfo.stopStatsLogging();
+        perfStats.stop();
         // stop logging
         if (connected && started) {
             try {
@@ -179,6 +184,6 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
     @Override
     public void onScreenCaptured(BufferedImage screen) {
-        ssi.incFramesCaptured(1);
+        PerformanceStats.incFramesCaptured(1);
     }
 }

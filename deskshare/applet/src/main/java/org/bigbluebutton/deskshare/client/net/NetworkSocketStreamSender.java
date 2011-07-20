@@ -20,7 +20,7 @@
 package org.bigbluebutton.deskshare.client.net;
 
 import org.bigbluebutton.deskshare.client.ExitCode;
-import org.bigbluebutton.deskshare.client.ScreenShareInfo;
+import org.bigbluebutton.deskshare.client.PerformanceStats;
 import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.awt.*;
@@ -41,7 +41,7 @@ public class NetworkSocketStreamSender implements Runnable {
     private NetworkStreamListener listener;
     private final SequenceNumberGenerator seqNumGenerator;
 
-    private ScreenShareInfo ssi;
+    private PerformanceStats perfStats;
 
     public NetworkSocketStreamSender(int id, NextBlockRetriever retriever, String room, Dimension screenDim,
 				     Dimension blockDim, SequenceNumberGenerator seqNumGenerator) {
@@ -52,7 +52,7 @@ public class NetworkSocketStreamSender implements Runnable {
         this.blockDim = blockDim;
         this.seqNumGenerator = seqNumGenerator;
 
-        ssi = ScreenShareInfo.getInstance();
+        perfStats = PerformanceStats.start();
     }
     
     public void addListener(NetworkStreamListener listener) {
@@ -95,12 +95,12 @@ public class NetworkSocketStreamSender implements Runnable {
     
     private void sendHeader(byte[] header) throws IOException {
 	int size = socket.write(header);
-	ssi.incrBytesSent(size);
+	perfStats.incrBytesSent(size);
     }
     
     private void sendToStream(ByteArrayOutputStream dataToSend) throws IOException {
 	int size = socket.write(dataToSend);
-	ssi.incrBytesSent(size);
+	perfStats.incrBytesSent(size);
     }
                     
     public void disconnect() throws ConnectionException {
@@ -142,7 +142,7 @@ public class NetworkSocketStreamSender implements Runnable {
             retriever.blockSent(changedBlock);
         }
 
-        ssi.incrBlocksSent(changedBlocks.length);
+        perfStats.incrBlocksSent(changedBlocks.length);
 
         sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
         sendToStream(dataToSend);
@@ -155,7 +155,7 @@ public class NetworkSocketStreamSender implements Runnable {
             Message message;
             try {
                 message = retriever.getNextMessageToSend();
-                ssi.incrMessagesSent(1);
+                perfStats.incrMessagesSent(1);
                 switch(message.getMessageType()) {
                     case BLOCK:
                         processBlockMessage((BlockMessage)message);
