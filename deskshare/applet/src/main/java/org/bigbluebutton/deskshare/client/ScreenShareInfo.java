@@ -84,6 +84,8 @@ public class ScreenShareInfo {
     private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; fps: %.2f; \n";
     private static final long STATS_INTERVAL = 2000;
 
+    private static PerformanceStats stats = PerformanceStats.getInstance();
+
     private ScreenShareInfo() {
         // ordering color depths based on file size obtained during test, increasing
         orderedColorDepths = new ArrayList<Integer>(NUM_COLOR_DEPTHS);
@@ -234,45 +236,6 @@ public class ScreenShareInfo {
         purgeBackedUpQueue = purge;
     }
 
-    /***************************************
-     * stats logging
-    ***************************************/
-    public void incrBytesSent(int bytes){
-        bytesSent.addAndGet(bytes);
-    }
-
-    public void incrMessagesSent(int messages){
-        messagesSent.addAndGet(messages);
-    }
-
-    public void incrBlocksSent(int blocks){
-        blocksSent.addAndGet(blocks);
-    }
-
-    public void setStartTime(long time) {
-        timeStarted.addAndGet(time);
-    }
-
-    public void incFramesCaptured(int frames) {
-        framesCaptured.addAndGet(frames);
-    }
-
-    public static void statsLogging() {
-        timer = new Timer(true);
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                printStats();
-            }
-        }, STATS_INTERVAL, STATS_INTERVAL);
-    }
-    
-    public static void stopStatsLogging() {
-        if (timer != null) {
-            timer.cancel();
-        }
-    }
-    
     /*****************************
     * pretty output methods
     ******************************/
@@ -282,13 +245,5 @@ public class ScreenShareInfo {
             "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
         );
         return sb.toString();
-    }
-    
-    public static void printStats(){
-        float duration = (System.currentTimeMillis() - timeStarted.get()) / 1000F;
-        int frames = framesCaptured.get();
-        float fps = frames / duration;
-        float kB  = bytesSent.get() / 1024F;
-        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, fps);
     }
 }
