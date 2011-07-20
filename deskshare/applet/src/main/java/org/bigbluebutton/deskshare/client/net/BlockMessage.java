@@ -21,7 +21,8 @@
 */
 package org.bigbluebutton.deskshare.client.net;
 
-import java.util.Arrays;
+import java.util.*;
+//import java.util.Arrays;
 
 public class BlockMessage implements Message {
 
@@ -100,11 +101,35 @@ public class BlockMessage implements Message {
         return forceKeyFrame;
     }
     
+    public boolean isEmpty() {
+        return (blocks.length == 0);
+    }
+    
     /**
      * @returns true if another message has the same blocks as this
      * depends on the blocks being sorted in setBlocks
     */
     public boolean hasSameBlocksAs(BlockMessage that) {
         return Arrays.equals(this.blocks, that.getBlocks());
+    }
+    
+    // find duplicate blocks
+    public BlockMessage discardBlocksSharedWith(BlockMessage that) {
+        ArrayList<Integer> dupes = new ArrayList<Integer>();
+
+        // first find the duplicates
+        for (Integer blockNumber: this.blocks) {
+            if (Arrays.binarySearch(that.getBlocks(), blockNumber) >= 0) {
+                dupes.add(new Integer(blockNumber));
+            }
+        }
+        System.out.println("Found " + dupes.size() + " duplicates out of " + this.blocks.length);
+        
+        // then remove the dupes from this message
+        for(Integer dupeBlockNumber: dupes) {
+            discardBlockByValue(dupeBlockNumber);
+        }
+
+        return this;
     }
 }

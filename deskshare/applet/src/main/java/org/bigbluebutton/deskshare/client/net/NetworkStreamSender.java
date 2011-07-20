@@ -27,10 +27,15 @@ import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.common.Dimension;
 
+import java.util.*;
+import java.util.Arrays.*;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+//import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 @ThreadSafe
 public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamListener {
@@ -38,7 +43,8 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     public static final String NAME = "NETWORKSTREAMSENDER: ";
 
     private ExecutorService executor;
-    private final BlockingQueue<Message> blockDataQ;
+    //private final BlockingQueue<Message> blockDataQ;
+    private LinkedBlockingQueue<Message> blockDataQ;
     private final int numThreads;
     private final String host;
     private final int port;
@@ -58,7 +64,8 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
 
     public NetworkStreamSender(BlockManager blockManager, String host, int port,
         String room, Dimension screenDim, Dimension blockDim, boolean httpTunnel) {
-        blockDataQ = new ArrayBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
+        //blockDataQ = new ArrayBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
+        blockDataQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
 
         this.blockManager = blockManager;
         this.host = host;
@@ -163,16 +170,122 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         httpSenders[i].connect(host);
     }
 
-    public void send(Message message) {
-        int size = blockDataQ.size();
+    /**
+     * this examines the block data queue for messages that may include the same blocks
+     * and discards any dupe blocks
+     * todo: refactor this nastiness
+    */
+    private synchronized void purgeBlockDataQ() {
+        Message message, nextMessage;
+        BlockMessage blockMessage, nextBlockMessage;
+        Integer[] blocks, nextBlocks;
+        boolean skipMessage = false;
+        int currentMessage = 0;
+        LinkedBlockingQueue<Message> cloneQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
+        AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
-        if (size > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
-            System.out.println("calling notifyQueueListener");
-            notifyQueueListener(size);
+        System.out.println("**** Purging queue with " + blockDataQ.size() + " message(s) and " + getQueueSizeInBlocks() + " blocks ****");
+                
+        Iterator it = blockDataQ.iterator();
+        while (it.hasNext()) {
+            message = (Message)it.next();
+            skipMessage = false;
+            ++currentMessage;
+            
+            // we only care about block messages that are keyframes
+            // and have another block message after them
+            // to dedupe against
+            if (!(   message.isBlockMessage() && 
+                     ((BlockMessage)message).getForceKeyFrame()) &&
+                     it.hasNext()) {
+                continue;
+            }
+
+            blockMessage = (BlockMessage)message;
+            blocks = blockMessage.getBlocks();
+            
+            // look at the next block message to see if it overlaps with this one
+            nextMessage = null;
+            System.out.println("Looking at next block message");
+            while (it.hasNext()) {
+                nextMessage = (Message)it.next();
+                if (!nextMessage.isBlockMessage()) {
+                    nextMessage = null;
+                    continue;
+                }
+            } 
+
+            // now compare the blocks between this msg and the next block message
+            if (nextMessage != null) {
+                nextBlockMessage = (BlockMessage)nextMessage;
+                nextBlocks = nextBlockMessage.getBlocks();
+                    
+                System.out.println("Comparing " + nextBlocks.length + " blocks in next relevant message to " + blocks.length + "in this one");
+                        
+                // exactly the same? ditch the whole message
+                if (nextBlockMessage.hasSameBlocksAs(blockMessage)) {
+                    System.out.println("Discarding entire message " + currentMessage + " because the next one updates the same blocks.");
+                    skipMessage = true;
+                } else { 
+                    // not exactly the same? See if we can prune dupe blocks
+                    blockMessage.discardBlocksSharedWith(nextBlockMessage);
+                    skipMessage = (nextBlockMessage.isEmpty());
+                }
+            }
+            
+            // if the current message must be retained, put it on the clone queue
+            if (skipMessage) {
+                System.out.println("Skipping this message");
+                continue;
+            }
+            try {
+                System.out.println("Putting message on clone");
+                cloneQ.put(message);
+            } catch (InterruptedException e) {
+                System.out.println("Can't put message on clone queue");
+            }
         }
         
-        while(!blockDataQ.offer(message)) {
-            blockDataQ.poll();
+        // we've looked at the whole queue, so time to swap in clone for real queue
+        // todo: look for a method like "drain" that achieves this
+        int oldQueueSize = getQueueSizeInBlocks();
+        int oldQueueMsgSize = blockDataQ.size();
+        try {
+            blockDataQ.clear();
+            for (Message cloneMessage: cloneQ) {
+                blockDataQ.put(cloneMessage);
+            } 
+        } catch(InterruptedException e) {
+            System.out.println("Can't dump clone queue into queue");
+        }
+
+        // display some stats
+        int newQueueSize = getQueueSizeInBlocks();
+        int newQueueMsgSize = blockDataQ.size();
+        System.out.println("Purged queue before: " + oldQueueMsgSize + " msg, " + oldQueueSize + " blocks - After: " + newQueueMsgSize + " msg, " + newQueueSize + " blocks");
+        System.out.println("Purging took " + (System.currentTimeMillis() - startTime.get()) + "ms");
+    }
+    
+    public void send(Message message) {
+        try {
+            // force keyframe? ditch all the other messages on the queue 
+            // since this message will overwrite everything
+            if (message.isBlockMessage() && ((BlockMessage)message).getForceKeyFrame()) {
+                System.out.println("Force keyframe, clearing the queue");
+                blockDataQ.clear();
+            }
+            // stick message on queue
+            blockDataQ.put(message);
+            
+            // if the queue is backed up, purge it of duplicate blocks
+            if (getQueueSizeInBlocks() > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
+                notifyQueueListener(blockDataQ.size());
+                if (ScreenShareInfo.getPurgeBackedUpQueue()) {
+                    purgeBlockDataQ();
+                }
+            }
+        } catch (InterruptedException e){
+            e.printStackTrace();
         }
     }
 
@@ -270,5 +383,16 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                 System.out.println(NAME + "Sender thread stopped. " + numRunningThreads + " sender threads remaining.");
             }
         }
+    }
+    
+    // utility function, remove me
+    private int getQueueSizeInBlocks() {
+        int numBlocks = 0;
+        for (Message message: blockDataQ) {
+            if (message.isBlockMessage()) {
+                numBlocks += ((BlockMessage)message).size();
+            }
+        }
+        return numBlocks;
     }
 }
