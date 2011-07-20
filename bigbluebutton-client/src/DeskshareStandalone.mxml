@@ -42,7 +42,6 @@
         import org.bigbluebutton.modules.deskshare.events.CursorEvent;
         import org.bigbluebutton.modules.deskshare.events.ViewStreamEvent;
 
-        private var cursor:Shape = new Shape();
         private var service:DeskshareService = new DeskshareService();
 
         private var ns:NetStream;
@@ -72,7 +71,6 @@
             containerRect = new Rectangle(0, 0, parent.width, parent.height);
             service.connect(host + "/" + room);
             stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
-            buildCursor();
         }
 
 
@@ -88,18 +86,15 @@
         }
 
         private function onUpdateCursorEvent(event:CursorEvent):void {
-            if (cursor == null || video == null) return;
-            cursor.x = (event.x / video.videoWidth) * video.width;
-            cursor.y = (event.y / video.videoHeight) * video.height;
-            cursor.visible = true;
+            if (video == null) return;
+
+            var newX:int = (event.x / video.videoWidth) * video.width;
+            var newY:int = (event.y / video.videoHeight) * video.height;
 
             cursorImg.visible = true;
 
-            // DO NOT compute the x and y coordinate and assign directly to the cursorImg
-            // as it results in a flickering and jerky mouse pointer (ralam jun 10, 2010).
-            cursorImg.x = cursor.x;
-            cursorImg.y = cursor.y;
-
+            cursorImg.x = newX;
+            cursorImg.y = newY;
         }
 
         private function onAsyncError(e:AsyncErrorEvent):void {
@@ -140,17 +135,12 @@
             }
         }
 
-        private function buildCursor():void {
-            cursor.graphics.lineStyle(6, 0xFF0000, 0.6);
-            cursor.graphics.drawCircle(0, 0, 3);
-            cursor.visible = false;
-        }
-
         private function startVideo(width:Number, height:Number):void {
             videoRect = new Rectangle(0, 0, width, height);
             buildNetStream();
             buildVideoHolder();
             buildVideo();
+            buildCursor();
         }
 
         private function buildNetStream():void {
@@ -166,8 +156,6 @@
 
         private function buildVideoHolder():void {
             videoHolder = new UIComponent();
-            videoHolder.addChild(cursor);
-            videoHolder.addChild(cursorImg);
             vbox.addChild(videoHolder);
         }
 
@@ -177,6 +165,10 @@
             video.attachNetStream(ns);
             videoHolder.addChild(video);
             resizeVideo(containerRect);
+        }
+
+        private function buildCursor():void {
+            videoHolder.addChild(cursorImg);
         }
 
         private function resizeVideo(boundsRect:Rectangle):void {
@@ -203,8 +195,7 @@
         ]]>
     </mx:Script>
 
-    <mx:Image id="cursorImg" visible="false"
-              source="@Embed('org/bigbluebutton/modules/deskshare/assets/images/cursor4.png')"/>
     <mx:Canvas id="vbox" width="100%" height="100%" />
     <mx:Button id="fullscreen" label="Fullscreen" click="toggleFullscreen();" bottom="0" right="0" visible="false"/>
+    <mx:Image id="cursorImg" visible="false" source="@Embed('org/bigbluebutton/modules/deskshare/assets/images/cursor4.png')"/>
 </mx:Application>
