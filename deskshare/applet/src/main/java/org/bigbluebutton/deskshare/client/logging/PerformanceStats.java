@@ -19,10 +19,13 @@
  *
  * ===License Header===
  */
-package org.bigbluebutton.deskshare.client;
+package org.bigbluebutton.deskshare.client.logging;
+
+import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -31,21 +34,16 @@ public class PerformanceStats
     // singleton for sharing across the app
     private static PerformanceStats instance;
     
-    private static AtomicInteger framesCaptured = new AtomicInteger();
-    private static AtomicInteger bytesSent = new AtomicInteger();
-    private static AtomicInteger blocksSent = new AtomicInteger();
-    private static AtomicInteger messagesSent = new AtomicInteger();
-    private static AtomicLong startTime = new AtomicLong();
-    private static AtomicLong endTime = new AtomicLong();
     private static Timer timer;
-    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; fps: %.2f; \n";
-    private static long statsInterval = 1000;
+    private static int statsInterval = 2000;
 
     private static boolean running;
+    private static PerformanceSampler sampler;
+    private static Sample sample = new Sample();
     
     private PerformanceStats() {}
-        
-    private PerformanceStats(long interval) {
+
+    private PerformanceStats(int interval) {
         setStatsInterval(interval);
     }
     
@@ -56,11 +54,11 @@ public class PerformanceStats
         return instance;
     }
     
-    public static PerformanceStats getInstance(long interval) {
+    public static PerformanceStats getInstance(int interval) {
         return setStatsInterval(interval);
     }
     
-    public static PerformanceStats setStatsInterval(long interval) {
+    public static PerformanceStats setStatsInterval(int interval) {
         statsInterval = interval;
         return getInstance();
     }
@@ -70,18 +68,32 @@ public class PerformanceStats
     }
     
     public static PerformanceStats start() {
+        // start is called from the setters as a precaution
+        // if statsLogging is turned off, stop this
+        if (!ScreenShareInfo.statsLogging) {
+            stop();
+            return getInstance();
+        }
+        
         if (timer != null || running) {
             return getInstance();
         }
+        
+        // start sampling
+        System.out.println("Starting performance logging");
+        sampler = new PerformanceSampler();
+        sample = new Sample();
         timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                // todo: replace printf with sprintf
-                asString();
+                // let's add a sample to our collection
+                sampler.add(sample);
+                sampler.computeSnapshot();
+                System.out.println(sampler.getLastResultsAsString());
+                sample = new Sample();
             }
         }, statsInterval, statsInterval);
-        startTime.set(now());
         running = true;
         return getInstance();
     }
@@ -90,7 +102,6 @@ public class PerformanceStats
         if (timer != null) {
             timer.cancel();
         }
-        endTime.set(now());
         running = false;
         return getInstance();
     }
@@ -98,49 +109,55 @@ public class PerformanceStats
     /***************************************
      * stats logging
     ***************************************/
-    public static PerformanceStats incrBytesSent(int bytes) {
+    public static void incrBytesSent(int bytes) {
+        if (!ScreenShareInfo.statsLogging) {
+            return;
+        }
         start();
-        bytesSent.addAndGet(bytes);
-        return instance;
+        sample.addBytes(bytes);
     }
 
-    public static PerformanceStats incrMessagesSent(int messages) {
+    public static void incrMessagesSent(int messages) {
+        if (!ScreenShareInfo.statsLogging) { 
+            return; 
+        }
         start();
-        messagesSent.addAndGet(messages);
-        return instance;
+        sample.addMessages(messages);
     }
 
-    public static PerformanceStats incrBlocksSent(int blocks) {
+    public static void incrBlocksSent(int blocks) {
+        if (!ScreenShareInfo.statsLogging) { 
+            return; 
+        }
         start();
-        blocksSent.addAndGet(blocks);
-        return instance;
+        sample.addBlocks(blocks);
     }
 
-    public static PerformanceStats setStartTime(long time) {
+    public static void setStartTime(long time) {
+        if (!ScreenShareInfo.statsLogging) { 
+            return; 
+        }
         start();
-        startTime.addAndGet(time);
-        return instance;
+        sample.setTime(time);
     }
 
-    public static PerformanceStats incFramesCaptured(int frames) {
+    public static void incrFramesCaptured(int frames) {
+        if (!ScreenShareInfo.statsLogging) { 
+            return; 
+        }
         start();
-        framesCaptured.addAndGet(frames);
-        return instance;
-    }
-
-    public static long now() {
-        return System.currentTimeMillis();
+        sample.addFrames(frames);
     }
     
-    public static String asString() {
-        if (!running) {
-            return "not running";
+    public static void incrKeyFramesSent(int kf) {
+        if (!ScreenShareInfo.statsLogging) { 
+            return; 
         }
-        float duration = (now() - startTime.get()) / 1000F;
-        int frames = framesCaptured.get();
-        float fps = frames / duration;
-        float kB  = bytesSent.get() / 1024F;
-        System.out.printf(STATS_FORMAT, duration, frames, blocksSent.get(), messagesSent.get(), kB, fps);
-        return "Pretty stats";
+        start();
+        sample.addKeyFrames(kf);
+    }
+    
+    public static long now() {
+        return System.currentTimeMillis();
     }
 }

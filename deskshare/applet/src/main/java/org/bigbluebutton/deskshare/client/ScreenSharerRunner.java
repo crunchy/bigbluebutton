@@ -27,6 +27,7 @@ import org.bigbluebutton.deskshare.client.blocks.ChangedBlocksListener;
 import org.bigbluebutton.deskshare.client.image_filters.ChangeTypeFilter;
 import org.bigbluebutton.deskshare.client.image_filters.ScalingFilter;
 import org.bigbluebutton.deskshare.client.image_filters.SimpleFilter;
+import org.bigbluebutton.deskshare.client.logging.PerformanceStats;
 import org.bigbluebutton.deskshare.client.net.ConnectionException;
 import org.bigbluebutton.deskshare.client.net.NetworkConnectionListener;
 import org.bigbluebutton.deskshare.client.net.NetworkStreamSender;
@@ -108,7 +109,6 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
     public void startSharing() {
         connected = sender.connect();
         if (connected) {
-            perfStats.setStartTime(System.currentTimeMillis());
             
             // set listeners
             ChangedBlocksListener changedBlocksListener = new ChangedBlockListenerImp(sender);
@@ -127,11 +127,11 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
             	mouseLocTaker.start();
 	    }
 
-            started = true;
-
 	    if(ScreenShareInfo.statsLogging) {
-		PerformanceStats.start();
+                perfStats.start();
 	    }
+
+            started = true;
 
         } else {
             notifyListener(ExitCode.DESKSHARE_SERVICE_UNAVAILABLE);
@@ -184,6 +184,6 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
 
     @Override
     public void onScreenCaptured(BufferedImage screen) {
-        PerformanceStats.incFramesCaptured(1);
+        PerformanceStats.incrFramesCaptured(1);
     }
 }

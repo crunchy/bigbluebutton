@@ -20,7 +20,7 @@
 package org.bigbluebutton.deskshare.client.net;
 
 import org.bigbluebutton.deskshare.client.ExitCode;
-import org.bigbluebutton.deskshare.client.PerformanceStats;
+import org.bigbluebutton.deskshare.client.logging.PerformanceStats;
 import org.bigbluebutton.deskshare.common.Dimension;
 
 import java.awt.*;
@@ -44,7 +44,8 @@ public class NetworkSocketStreamSender implements Runnable {
     private PerformanceStats perfStats;
 
     public NetworkSocketStreamSender(int id, NextBlockRetriever retriever, String room, Dimension screenDim,
-				     Dimension blockDim, SequenceNumberGenerator seqNumGenerator) {
+        Dimension blockDim, SequenceNumberGenerator seqNumGenerator) {
+            
         this.id = id;
         this.retriever = retriever;
         this.room = room;
@@ -70,7 +71,7 @@ public class NetworkSocketStreamSender implements Runnable {
     }
 
     public void connect(NetworkSocket networkSocket) {
-    	socket = networkSocket;
+        socket = networkSocket;
     }
     
     public void sendStartStreamMessage() throws ConnectionException {
@@ -94,13 +95,13 @@ public class NetworkSocketStreamSender implements Runnable {
     }
     
     private void sendHeader(byte[] header) throws IOException {
-	int size = socket.write(header);
-	perfStats.incrBytesSent(size);
+        int size = socket.write(header);
+        perfStats.incrBytesSent(size);
     }
     
     private void sendToStream(ByteArrayOutputStream dataToSend) throws IOException {
-	int size = socket.write(dataToSend);
-	perfStats.incrBytesSent(size);
+        int size = socket.write(dataToSend);
+        perfStats.incrBytesSent(size);
     }
                     
     public void disconnect() throws ConnectionException {
@@ -143,6 +144,9 @@ public class NetworkSocketStreamSender implements Runnable {
         }
 
         perfStats.incrBlocksSent(changedBlocks.length);
+        if (message.getForceKeyFrame()) {
+            perfStats.incrKeyFramesSent(1);
+        }
 
         sendHeader(BlockStreamProtocolEncoder.encodeHeaderAndLength(dataToSend));
         sendToStream(dataToSend);

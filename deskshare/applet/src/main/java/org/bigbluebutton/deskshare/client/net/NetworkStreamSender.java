@@ -21,16 +21,15 @@ package org.bigbluebutton.deskshare.client.net;
 
 import net.jcip.annotations.ThreadSafe;
 
-import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ExitCode;
+import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.common.Dimension;
+import org.bigbluebutton.deskshare.client.logging.PerformanceStats;
 
 import java.util.*;
 import java.util.Arrays.*;
-import java.util.concurrent.ArrayBlockingQueue;
-//import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +42,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     public static final String NAME = "NETWORKSTREAMSENDER: ";
 
     private ExecutorService executor;
-    //private final BlockingQueue<Message> blockDataQ;
     private LinkedBlockingQueue<Message> blockDataQ;
     private final int numThreads;
     private final String host;
@@ -61,10 +59,10 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     private NetworkConnectionListener listener;
     private QueueListener queueListener;
     private final SequenceNumberGenerator seqNumGenerator = new SequenceNumberGenerator();
-
+    private PerformanceStats perfStats = PerformanceStats.getInstance();
+    
     public NetworkStreamSender(BlockManager blockManager, String host, int port,
         String room, Dimension screenDim, Dimension blockDim, boolean httpTunnel) {
-        //blockDataQ = new ArrayBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
         blockDataQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
 
         this.blockManager = blockManager;
@@ -184,8 +182,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         LinkedBlockingQueue<Message> cloneQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
-        System.out.println("**** Purging queue with " + blockDataQ.size() + " message(s) and " + getQueueSizeInBlocks() + " blocks ****");
-                
         Iterator it = blockDataQ.iterator();
         while (it.hasNext()) {
             message = (Message)it.next();
@@ -206,7 +202,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
             
             // look at the next block message to see if it overlaps with this one
             nextMessage = null;
-            System.out.println("Looking at next block message");
             while (it.hasNext()) {
                 nextMessage = (Message)it.next();
                 if (!nextMessage.isBlockMessage()) {
@@ -220,11 +215,8 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                 nextBlockMessage = (BlockMessage)nextMessage;
                 nextBlocks = nextBlockMessage.getBlocks();
                     
-                System.out.println("Comparing " + nextBlocks.length + " blocks in next relevant message to " + blocks.length + "in this one");
-                        
                 // exactly the same? ditch the whole message
                 if (nextBlockMessage.hasSameBlocksAs(blockMessage)) {
-                    System.out.println("Discarding entire message " + currentMessage + " because the next one updates the same blocks.");
                     skipMessage = true;
                 } else { 
                     // not exactly the same? See if we can prune dupe blocks
@@ -235,35 +227,25 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
             
             // if the current message must be retained, put it on the clone queue
             if (skipMessage) {
-                System.out.println("Skipping this message");
                 continue;
             }
             try {
-                System.out.println("Putting message on clone");
                 cloneQ.put(message);
             } catch (InterruptedException e) {
-                System.out.println("Can't put message on clone queue");
+                // System.out.println("Can't put message on clone queue");
             }
         }
         
         // we've looked at the whole queue, so time to swap in clone for real queue
-        // todo: look for a method like "drain" that achieves this
-        int oldQueueSize = getQueueSizeInBlocks();
-        int oldQueueMsgSize = blockDataQ.size();
         try {
             blockDataQ.clear();
             for (Message cloneMessage: cloneQ) {
                 blockDataQ.put(cloneMessage);
             } 
         } catch(InterruptedException e) {
-            System.out.println("Can't dump clone queue into queue");
+            // System.out.println("Can't dump clone queue into queue");
         }
 
-        // display some stats
-        int newQueueSize = getQueueSizeInBlocks();
-        int newQueueMsgSize = blockDataQ.size();
-        System.out.println("Purged queue before: " + oldQueueMsgSize + " msg, " + oldQueueSize + " blocks - After: " + newQueueMsgSize + " msg, " + newQueueSize + " blocks");
-        System.out.println("Purging took " + (System.currentTimeMillis() - startTime.get()) + "ms");
     }
     
     public void send(Message message) {
@@ -271,7 +253,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
             // force keyframe? ditch all the other messages on the queue 
             // since this message will overwrite everything
             if (message.isBlockMessage() && ((BlockMessage)message).getForceKeyFrame()) {
-                System.out.println("Force keyframe, clearing the queue");
                 blockDataQ.clear();
             }
             // stick message on queue

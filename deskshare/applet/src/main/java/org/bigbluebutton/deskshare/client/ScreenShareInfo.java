@@ -73,19 +73,6 @@ public class ScreenShareInfo {
     private static ArrayList<Integer> orderedColorDepths;
     private static int colorDepthIndex = 0;
 
-    private static AtomicInteger framesCaptured = new AtomicInteger();
-    private static AtomicInteger bytesSent = new AtomicInteger();
-    private static AtomicInteger blocksSent = new AtomicInteger();
-    private static AtomicInteger messagesSent = new AtomicInteger();
-
-    private static AtomicLong timeStarted = new AtomicLong();
-    private static Timer timer;
-
-    private static String STATS_FORMAT = "s: %.3f; frames: %,d; blocks: %, d; messages: %,d; kB: %,.3f; fps: %.2f; \n";
-    private static final long STATS_INTERVAL = 2000;
-
-    private static PerformanceStats stats = PerformanceStats.getInstance();
-
     private ScreenShareInfo() {
         // ordering color depths based on file size obtained during test, increasing
         orderedColorDepths = new ArrayList<Integer>(NUM_COLOR_DEPTHS);
@@ -240,10 +227,8 @@ public class ScreenShareInfo {
     * pretty output methods
     ******************************/
     public static String asString() {
-        StringBuffer sb = new StringBuffer("Color depth index: " + findColorDepthIndex() + "\n" + 
-            "Color depth name: " + getColorDepthName() + "\n" +
-            "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n"
-        );
-        return sb.toString();
+        return  "Color depth index: " + findColorDepthIndex() + "\n" + 
+                "Color depth name: " + getColorDepthName() + "\n" +
+                "New keyframe threshold: " + getKeyframeTriggerThreshold() + "\n";
     }
 }
