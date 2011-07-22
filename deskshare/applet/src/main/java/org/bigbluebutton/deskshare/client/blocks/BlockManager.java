@@ -70,7 +70,7 @@ public class BlockManager {
                 double pctChanged = (double)changedCount / numberOfBlocks;
                 if (pctChanged > ScreenShareInfo.getKeyframeTriggerThreshold()) {
                     forceKeyFrame = true;
-                    System.out.println(100 * pctChanged + "% blocks changed ********");
+                    System.out.printf("%.2f%% blocks changed\n", 100 * pctChanged);
                     // mark all the blocks as changed
                     changedBlocks = getChangedBlocks(capturedScreen, true);
                 }

@@ -22,6 +22,7 @@ package org.bigbluebutton.deskshare.client.net;
 import net.jcip.annotations.ThreadSafe;
 
 import org.bigbluebutton.deskshare.client.ExitCode;
+import org.bigbluebutton.deskshare.client.PerformanceListener;
 import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
@@ -58,6 +59,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     private BlockManager blockManager;
     private NetworkConnectionListener listener;
     private QueueListener queueListener;
+    private PerformanceListener performanceListener;
     private final SequenceNumberGenerator seqNumGenerator = new SequenceNumberGenerator();
     private PerformanceStats perfStats = PerformanceStats.getInstance();
     
@@ -87,6 +89,10 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         this.queueListener = queueListener;
     }
 
+    public void addPerformanceListener(PerformanceListener performanceListener) {
+        this.performanceListener = performanceListener;
+    }
+
     private void notifyNetworkConnectionListener(ExitCode reason) {
         if (listener != null) {
             listener.networkConnectionException(reason);
@@ -96,6 +102,12 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     private void notifyQueueListener(int queueSize) {
         if (queueListener != null) {
             queueListener.onQueueBackedup(queueSize);
+        }
+    }
+    
+    private void notifyPerformanceListener(boolean slow) {
+        if (performanceListener != null) {
+            performanceListener.onSlowPerformance(slow);
         }
     }
 
@@ -265,6 +277,11 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
                     purgeBlockDataQ();
                 }
             }
+            // if we're being slow, notify also
+            if (perfStats.isSlow()) {
+                notifyPerformanceListener(true);
+            }
+            
         } catch (InterruptedException e){
             e.printStackTrace();
         }

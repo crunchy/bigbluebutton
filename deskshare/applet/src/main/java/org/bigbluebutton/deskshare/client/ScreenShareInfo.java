@@ -48,14 +48,14 @@ public class ScreenShareInfo {
     public static boolean httpTunnel;
     public static boolean fullScreen;
     public static boolean trackMouse = true;
-    public static boolean statsLogging = true;
+    public static boolean statsLogging = false;
     public static Image sysTrayIcon;
     public static boolean enableTrayActions;
     public static Container contentPane;
     public static Dimension blockSize = new Dimension(64, 64);
     public static final int MAX_WIDTH = 1280;
     public static final int IDEAL_PAUSE_DURATION = 100;
-    public static final int MAX_PAUSE_DURATION = 250;
+    public static final int MAX_PAUSE_DURATION = 500; // ~1 fps (counting the time it takes to take a screen shot)
     public static final int NETWORK_SENDER_COUNT = 1;
     public static final int MAX_QUEUED_MESSAGES = 20;
     // decrease screenshot frequency if queue (in blocks) > this

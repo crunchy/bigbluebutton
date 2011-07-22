@@ -35,10 +35,11 @@ public class PerformanceStats
     private static PerformanceStats instance;
     
     private static Timer timer;
-    private static int statsInterval = 2000;
+    private static int statsInterval = 1000;
 
     private static boolean running;
     private static PerformanceSampler sampler;
+    private static boolean slow = false;
     private static Sample sample = new Sample();
     
     private PerformanceStats() {}
@@ -67,9 +68,13 @@ public class PerformanceStats
         return running;
     }
     
+    public boolean isSlow() {
+        return running && slow;
+    }
+    
     public static PerformanceStats start() {
         // start is called from the setters as a precaution
-        // if statsLogging is turned off, stop this
+        // if statsLogging is turned off, stop 
         if (!ScreenShareInfo.statsLogging) {
             stop();
             return getInstance();
@@ -92,6 +97,7 @@ public class PerformanceStats
                 sampler.computeSnapshot();
                 System.out.println(sampler.getLastResultsAsString());
                 sample = new Sample();
+                slow = sampler.isSlowingDown();
             }
         }, statsInterval, statsInterval);
         running = true;

@@ -21,20 +21,18 @@
 */
 package org.bigbluebutton.deskshare.client;
 
-import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ScreenCaptureTaker;
 
-public class QueueListenerImp implements QueueListener {
-
+public class PerformanceListener {
+    
     private final ScreenCaptureTaker captureTaker;
     
-    public QueueListenerImp(ScreenCaptureTaker captureTaker) {
+    public PerformanceListener(ScreenCaptureTaker captureTaker) {
         this.captureTaker = captureTaker;
     }
     
-    @Override
-    public void onQueueBackedup(int queueSize) {
-        //System.out.println("Notifying capture taker to recompute its frequency");
-        captureTaker.recomputePauseDurationForQueue(queueSize);
+    public void onSlowPerformance(boolean slow) {
+        captureTaker.maxPauseDuration();
     }
 }
+

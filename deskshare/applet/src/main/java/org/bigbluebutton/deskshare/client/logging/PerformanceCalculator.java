@@ -42,6 +42,12 @@ public class PerformanceCalculator {
     private double blockPS;
     private double messagePS;
     private double bytePS;
+    // KBytes / blocks / second
+    // measuring KBps isn't good enough 
+    // b/c it'll be low if you're sending few blocks
+    private double throughput; 
+    // don't compute throughput unless you have at least this many blocks
+    public static final int MIN_BLOCKS_FOR_THROUGHPUT = 10;
 
     private long minTime;
     private long maxTime;
@@ -67,9 +73,14 @@ public class PerformanceCalculator {
         blockPS    = 0.0;
         messagePS  = 0.0;
         bytePS     = 0.0;
+        
+        // -1 = "no idea what's going on"
+        // 0  = no throughput
+        throughput = -1.0; 
 
         minTime = 0;
         maxTime = 0;
+        
     }
     
     public double getBlockPS() {
@@ -84,10 +95,21 @@ public class PerformanceCalculator {
         return bytePS;
     }
 
+    public long getMaxTime() {
+        return maxTime;
+    }
+    
+    public double getThroughput() {
+        return throughput;
+    }
+    
+    public boolean hasValidThroughput() {
+        return (throughput >= 0);
+    }
+    
     public synchronized PerformanceCalculator compute() {
         initialize();
         if (this.samples.size() < 2) {
-            System.out.println("Error - not enough samples");
             return this;
         }
 
@@ -99,7 +121,6 @@ public class PerformanceCalculator {
 
         // shouldn't happen--samples should be consecutive
         if (minTime == maxTime) {
-            System.out.println("Error - same time in both samples");
             return this;
         }
         
@@ -117,14 +138,18 @@ public class PerformanceCalculator {
         messagePS           = diff.getMessageCount()  / durationInSeconds;
         bytePS              = diff.getByteCount()     / durationInSeconds;
         
+        if (blockCount >= MIN_BLOCKS_FOR_THROUGHPUT && durationInSeconds != 0) {
+            throughput = (double)byteCount / (double)blockCount / durationInSeconds;
+        }
+        
         return this;
     }
     
     @Override
     public String toString() {
-        return String.format(  "Time: %,d - Duration: %,.3f s\nKF: %,d - Msg: %,d - Blk: %,d - KB: %,.2f\nMsg/s: %,.2f - Blk/s: %,.2f - KB/s: %,.2f",
+        return String.format(  "Time: %,d - Duration: %,.3f s\nKF: %,d - Msg: %,d - Blk: %,d - KB: %,.2f\nMsg/s: %,.2f - Blk/s: %,.2f - KB/s: %,.2f - Thru: %,.4f",
                                 maxTime, durationInSeconds, 
                                 keyFrameCount, messageCount, blockCount, (double)byteCount / 1024,
-                                messagePS, blockPS, (double)bytePS / 1024);
+                                messagePS, blockPS, (double)bytePS / 1024, throughput);
     }
 }

@@ -36,7 +36,11 @@ public class ScreenCaptureTaker {
     private volatile boolean startCapture = false;
     private final Executor screenCapTakerExec = Executors.newSingleThreadExecutor();
     private int pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
-    private final int PAUSE_DURATION_RECOMPUTE_FREQUENCY = 25; // recompute pause duration every x frames
+    // recompute pause duration every x frames
+    private final int PAUSE_DURATION_RECOMPUTE_FREQUENCY = 20; 
+    // assume 25ms per screenshot + this pause = 20 fps
+    // this is not configurable and shouldn't be in ScreenShareInfo
+    private final int MIN_PAUSE_DURATION = 25; 
 
     public ScreenCaptureTaker(ScreenCapture capture) {
         this.capture = capture;
@@ -114,17 +118,29 @@ public class ScreenCaptureTaker {
     public int recomputePauseDuration(long captureDuration) {
         if (captureDuration + pauseDuration > ScreenShareInfo.MAX_PAUSE_DURATION) {
             pauseDuration = Math.max(10,
-                (int) (ScreenShareInfo.MAX_PAUSE_DURATION - captureDuration)); // at least 10
+                (int) (ScreenShareInfo.MAX_PAUSE_DURATION - captureDuration)); 
         } else {
             pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
         }
         return pauseDuration;
     }
     
+    // slow down when the queue backs up
     public int recomputePauseDurationForQueue(int queueSizeInBlocks) {
-        // let's make pauseDuration 20% longer for now
-        pauseDuration = Math.min(ScreenShareInfo.MAX_PAUSE_DURATION, (int)(pauseDuration * 1.2));
-        System.out.println("New pause duration is " + pauseDuration);
+        // let's make pauseDuration 15% longer for now
+        pauseDuration = Math.min(ScreenShareInfo.MAX_PAUSE_DURATION, (int)(pauseDuration * 1.15));
+        return pauseDuration;
+    }
+    
+    // abrupt slowdown
+    public int maxPauseDuration() {
+        pauseDuration = ScreenShareInfo.MAX_PAUSE_DURATION;
+        return pauseDuration;
+    }
+    
+    // gradual speed up
+    public int decreasePauseDuration() {
+        pauseDuration = (int)Math.max(MIN_PAUSE_DURATION, .75 * pauseDuration);
         return pauseDuration;
     }
     

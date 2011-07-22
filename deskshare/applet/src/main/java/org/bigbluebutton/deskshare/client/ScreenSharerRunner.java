@@ -21,7 +21,8 @@
  */
 package org.bigbluebutton.deskshare.client;
 
-import org.bigbluebutton.deskshare.client.QueueListenerImp;
+import org.bigbluebutton.deskshare.client.PerformanceListener;
+import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
 import org.bigbluebutton.deskshare.client.blocks.ChangedBlocksListener;
 import org.bigbluebutton.deskshare.client.image_filters.ChangeTypeFilter;
@@ -99,8 +100,12 @@ public class ScreenSharerRunner implements ScreenCaptureListener {
         blockManager.initialize(screenDim, tileDim);
 
         sender = new NetworkStreamSender(blockManager, ssi.host, ssi.port, ssi.room, screenDim, tileDim, ssi.httpTunnel);
-        QueueListener queueListener = new QueueListenerImp(captureTaker);
-        sender.addQueueListener(queueListener);
+        
+        sender.addQueueListener(new QueueListener(captureTaker));
+        
+        if (ssi.statsLogging) {
+            sender.addPerformanceListener(new PerformanceListener(captureTaker));
+        }
         
         // log stats
         perfStats = PerformanceStats.getInstance();
