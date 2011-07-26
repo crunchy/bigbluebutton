@@ -35,4 +35,9 @@ public class QueueListener {
         //System.out.println("Notifying capture taker to recompute its frequency");
         captureTaker.recomputePauseDurationForQueue(queueSize);
     }
+    
+    public void onQueueCleared() {
+        //System.out.println("Notifying capture taker queue is clear");
+        captureTaker.resetPauseDuration();
+    }
 }

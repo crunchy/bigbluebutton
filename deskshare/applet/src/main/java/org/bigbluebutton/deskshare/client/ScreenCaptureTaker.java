@@ -100,7 +100,7 @@ public class ScreenCaptureTaker {
                 long captureDuration = 0;
                 // when this reaches PAUSE_DURATION_RECOMPUTE_FREQUENCY, re-examine the pause duration
                 int capturesBeforeRecompute = 0;  
-                pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
+                resetPauseDuration();
                 while (startCapture) {
                     captureDuration = captureScreen();
                     pause(pauseDuration);
@@ -129,6 +129,12 @@ public class ScreenCaptureTaker {
     public int recomputePauseDurationForQueue(int queueSizeInBlocks) {
         // let's make pauseDuration 15% longer for now
         pauseDuration = Math.min(ScreenShareInfo.MAX_PAUSE_DURATION, (int)(pauseDuration * 1.15));
+        return pauseDuration;
+    }
+    
+    // reset default pause duration
+    public int resetPauseDuration() {
+        pauseDuration = ScreenShareInfo.IDEAL_PAUSE_DURATION;
         return pauseDuration;
     }
     

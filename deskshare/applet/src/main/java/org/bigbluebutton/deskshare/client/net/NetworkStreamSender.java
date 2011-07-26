@@ -101,7 +101,11 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     
     private void notifyQueueListener(int queueSize) {
         if (queueListener != null) {
-            queueListener.onQueueBackedup(queueSize);
+            if (queueSize == 0) { 
+                queueListener.onQueueCleared();
+            } else {
+                queueListener.onQueueBackedup(queueSize);
+            }
         }
     }
     
@@ -266,17 +270,20 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
             // since this message will overwrite everything
             if (message.isBlockMessage() && ((BlockMessage)message).getForceKeyFrame()) {
                 blockDataQ.clear();
+                notifyQueueListener(0);
             }
             // stick message on queue
             blockDataQ.put(message);
             
             // if the queue is backed up, purge it of duplicate blocks
-            if (getQueueSizeInBlocks() > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
-                notifyQueueListener(blockDataQ.size());
+            int qSizeInBlocks = getQueueSizeInBlocks();
+            if (qSizeInBlocks > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
                 if (ScreenShareInfo.getPurgeBackedUpQueue()) {
                     purgeBlockDataQ();
                 }
+                notifyQueueListener(qSizeInBlocks);
             }
+            
             // if we're being slow, notify also
             if (perfStats.isSlow()) {
                 notifyPerformanceListener(true);
