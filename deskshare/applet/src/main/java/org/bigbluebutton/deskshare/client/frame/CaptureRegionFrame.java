@@ -34,7 +34,7 @@ public class CaptureRegionFrame {
 
     private Button btnStartStop;
     //private JComboBox colorDepthSelect, keyframeThresholdSelect;
-    private JLabel windowSizeLabel;
+    //private JLabel windowSizeLabel;
     /*
     private final String[] colorDepthNames = { 
         "TYPE_BYTE_BINARY",
@@ -80,6 +80,7 @@ public class CaptureRegionFrame {
     };
     private final int keyframeThresholdSelectedIndex = 3;
     */
+    /*
     private JComboBox presetSelect;
     private final String[] presetNames = { 
         "Low keyframe, low color (default)",
@@ -94,7 +95,7 @@ public class CaptureRegionFrame {
         DeskShareAppletSettings.Preset.HIGH_KEYFRAME_LOW_COLOR,
         DeskShareAppletSettings.Preset.HIGH_KEYFRAME_HIGH_COLOR
     };
-
+    */
     private CaptureRegionListener client;
     private boolean capturing = false;
     private WindowlessFrame frame;
@@ -167,7 +168,6 @@ public class CaptureRegionFrame {
             }
         });
         panel.add(keyframeThresholdSelect);
-*/        
         presetSelect = new JComboBox(presetNames);
         presetSelect.setSelectedIndex(presetNamesSelectedIndex);
         presetSelect.addActionListener(new ActionListener() {
@@ -179,17 +179,18 @@ public class CaptureRegionFrame {
         panel.add(presetSelect);
         windowSizeLabel = new JLabel("Window size will go here");
         panel.add(windowSizeLabel); 
+        */
         
         return panel;
     }
-    
+    /*
     public void updateWindowSizeLabel() {
         Rectangle rect = frame.getFramedRectangle();
         windowSizeLabel.setText((int)rect.getWidth() + "x" + (int)rect.getHeight());
     }
-    
+    */
     private void startCapture() {
-        updateWindowSizeLabel();
+        //updateWindowSizeLabel();
         frame.changeBorderToBlue();
         frame.removeResizeListeners();
         Rectangle rect = frame.getFramedRectangle();
