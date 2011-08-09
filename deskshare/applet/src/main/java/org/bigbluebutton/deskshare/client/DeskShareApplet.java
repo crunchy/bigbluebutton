@@ -29,6 +29,7 @@ public class DeskShareApplet extends JApplet implements ClientListener {
     
     public static final String NAME = "DESKSHAREAPPLET: ";
     private static final long serialVersionUID = 1L;
+    private static boolean running = false;
 
     String hostValue = "localhost";
     Integer portValue = 9123;
@@ -72,6 +73,10 @@ public class DeskShareApplet extends JApplet implements ClientListener {
 
     @Override
     public void start() {
+        if (running) {
+            System.out.println("Already running");
+            return;
+        }
         System.out.println("Desktop Sharing Applet Starting");
         super.start();
         client = new DeskshareClient.NewBuilder()
@@ -94,12 +99,14 @@ public class DeskShareApplet extends JApplet implements ClientListener {
         client.addClientListener(this);
         // for debugging; remove
         displaySettings(); 
+        running = true;
         client.start();
     }
 
     @Override
     public void destroy() {
         System.out.println("Desktop Sharing Applet Destroy");
+        running = false;
         client.stop();
         super.destroy();
     }
@@ -107,11 +114,13 @@ public class DeskShareApplet extends JApplet implements ClientListener {
     @Override
     public void stop() {
         System.out.println("Desktop Sharing Applet Stopping");
+        running = false;
         client.stop();
         super.stop();
     }
 
     public void onClientStop(ExitCode reason) {
+        running = false;
         client.stop();
     }
     
