@@ -46,14 +46,12 @@ public class DeskshareClient {
     }
 
     private void shareWithFrame() {
-        //screenSharer = new ScreenRegionSharer(ssi);
         screenSharer = new ScreenRegionSharer();
         screenSharer.addClientListener(listener);
         screenSharer.start();
     }
 
     private void shareFullScreen() {
-        //screenSharer = new FullScreenSharer(ssi);
         screenSharer = new FullScreenSharer();
         screenSharer.addClientListener(listener);
         screenSharer.start();
