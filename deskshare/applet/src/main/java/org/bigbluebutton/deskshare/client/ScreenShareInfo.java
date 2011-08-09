@@ -49,6 +49,7 @@ public class ScreenShareInfo {
     public static boolean fullScreen;
     public static boolean trackMouse = true;
     public static boolean statsLogging = false;
+    public static boolean adjustPauseFromQueueSize = false;
     public static Image sysTrayIcon;
     public static boolean enableTrayActions;
     public static Container contentPane;
@@ -60,7 +61,7 @@ public class ScreenShareInfo {
     public static final int MAX_QUEUED_MESSAGES = 20;
     // decrease screenshot frequency if queue (in blocks) > this
     public static final int MAX_QUEUE_SIZE_FOR_PAUSE = 50; 
-    public static boolean purgeBackedUpQueue = true;
+    public static boolean purgeBackedUpQueue = false;
     
     // singleton for sharing across the app
     private static ScreenShareInfo instance;

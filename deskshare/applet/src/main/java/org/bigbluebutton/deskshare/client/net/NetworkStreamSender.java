@@ -285,7 +285,7 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
             }
             
             // if we're being slow, notify also
-            if (perfStats.isSlow()) {
+            if (ScreenShareInfo.adjustPauseFromQueueSize && perfStats.isSlow()) {
                 notifyPerformanceListener(true);
             }
             
