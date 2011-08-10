@@ -376,6 +376,11 @@ private class VerticalBarFrame extends BarFrame {
         mWindowFrame = new JFrame("Windowless Frame");
         //mWindowFrame.setAlwaysOnTop(true);
 
+        // https://www.pivotaltracker.com/story/show/16780843
+        // exception on close
+        // http://www.javakb.com/Uwe/Forum.aspx/java-programmer/33818/Instantiating-a-JFrame-in-a-JApplet-exception-java-security
+        mWindowFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
         mTopBorder = new HorizontalBarFrame(mWindowFrame, new StaticOffsetLocator(0, 0));
         mBottomBorder = new HorizontalBarFrame(mWindowFrame, new OffsetLocator() {
             
