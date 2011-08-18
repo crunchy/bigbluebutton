@@ -74,6 +74,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
           case StopSession => stopSession()    
           case ml: UpdateSessionMouseLocation => mouseLoc = ml.loc 
           case "GenerateFrame" => {
+							log.debug("Session: Generating Frame for room %s", room)
 	            generateFrame(false)
 	            if (!stop) {
 	              scheduleGenerateFrame()
