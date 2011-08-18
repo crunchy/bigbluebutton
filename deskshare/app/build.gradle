@@ -8,6 +8,12 @@ jar.enabled = true
 
 archivesBaseName = 'bbb-deskshare-app' 
 
+sourceSets.main {
+    java.srcDirs = []
+    scala.srcDir 'src/main/java'
+}
+
+
 dependencies {	  
     providedCompile 'javax.servlet:servlet-api:2.5@jar', 'org.apache.mina:mina-core:2.0.0-RC1@jar' 
     providedCompile 'spring:spring-web:3.0.0@jar', 'spring:spring-core:3.0.0@jar'
