@@ -48,11 +48,11 @@ public class BlockStreamEventMessageHandler extends IoHandlerAdapter {
     public void messageReceived( IoSession session, Object message ) throws Exception
     {
     	if (message instanceof CaptureStartBlockEvent) {
-    		System.out.println("Got CaptureStartBlockEvent");
+    		log.debug("[BlockStreamEventMessageHandler] Got CaptureStartBlockEvent");
     		CaptureStartBlockEvent event = (CaptureStartBlockEvent) message;
     		sessionManager.createSession(event.getRoom(), event.getScreenDimension(), event.getBlockDimension(), event.getSequenceNum());
     	} else if (message instanceof CaptureUpdateBlockEvent) {
-//    		System.out.println("Got CaptureUpdateBlockEvent");
+    		log.debug("[BlockStreamEventMessageHandler] Got CaptureUpdateBlockEvent");
     		CaptureUpdateBlockEvent event = (CaptureUpdateBlockEvent) message;
     		sessionManager.updateBlock(event.getRoom(), event.getPosition(), event.getVideoData(), event.isKeyFrame(), event.getSequenceNum());
     	} else if (message instanceof CaptureEndBlockEvent) {
@@ -99,4 +99,5 @@ public class BlockStreamEventMessageHandler extends IoHandlerAdapter {
     public void setSessionManagerGateway(ISessionManagerGateway sm) {
     	sessionManager = sm;
     }
+
 }
