@@ -56,6 +56,8 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 	def scheduleGenerateKeyFrame() {
 		val mainActor = self
 		actor {
+			log.debug("Session: Schedule Keyframe")
+			Thread.sleep(30000)
 			mainActor ! "GenerateAKeyFrame"
 		}
 	}
@@ -63,7 +65,8 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 	def scheduleGenerateFrame() {
 		val mainActor = self
 		actor {
-			Thread.sleep(100)
+			log.debug("Session: Schedule frame")
+			Thread.sleep(250)
 			mainActor ! "GenerateFrame"
 		}
 	}
@@ -111,7 +114,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 		blockManager.initialize()	
 		stop = false
 		stream ! StartStream
-		generateFrame(true)
+		generateKeyFrame(true)
 		scheduleGenerateFrame()
 	}
  
@@ -132,6 +135,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 			log.warning("Session: Did not received updates for more than 1 minute. Removing session %s", room)
 			sessionManager ! new RemoveSession(room)
 		} else {
+			 log.debug("Session: Generate frame")
 		   stream ! new UpdateStream(room, blockManager.generateFrame(keyframe))
 		   stream ! new UpdateStreamMouseLocation(room, mouseLoc)
 		}
