@@ -56,7 +56,6 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 	def scheduleGenerateKeyFrame() {
 		val mainActor = self
 		actor {
-			Thread.sleep(30000)
 			mainActor ! "GenerateAKeyFrame"
 		}
 	}
@@ -64,7 +63,6 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 	def scheduleGenerateFrame() {
 		val mainActor = self
 		actor {
-			Thread.sleep(250)
 			mainActor ! "GenerateFrame"
 		}
 	}
