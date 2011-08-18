@@ -65,7 +65,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 	def scheduleGenerateFrame() {
 		val mainActor = self
 		actor {
-			log.debug("Session: Schedule frame")
+
 			Thread.sleep(250)
 			mainActor ! "GenerateFrame"
 		}
@@ -114,7 +114,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 		blockManager.initialize()	
 		stop = false
 		stream ! StartStream
-		generateKeyFrame(true)
+		generateFrame(true)
 		scheduleGenerateFrame()
 	}
  
