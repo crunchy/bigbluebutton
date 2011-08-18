@@ -111,7 +111,7 @@ class SessionSVC(sessionManager:SessionManagerSVC, room: String, screenDim: Dime
 		stop = false
 		stream ! StartStream
 		generateFrame(true)
-		scheduleGenerateFrame()
+		scheduleGenerateKeyFrame()
 	}
  
 	private def stopSession() {
