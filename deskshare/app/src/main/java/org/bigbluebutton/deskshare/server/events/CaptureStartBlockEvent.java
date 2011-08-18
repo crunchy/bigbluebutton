@@ -21,7 +21,7 @@
 */
 package org.bigbluebutton.deskshare.server.events;
 
-import org.bigbluebutton.deskshare.server.svc1.Dimension;
+import org.bigbluebutton.deskshare.common.Dimension;
 
 public class CaptureStartBlockEvent {
 
