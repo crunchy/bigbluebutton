@@ -21,10 +21,6 @@
 */
 package org.bigbluebutton.deskshare.server.socket;
 
-import java.awt.Point;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
@@ -36,6 +32,10 @@ import org.bigbluebutton.deskshare.server.events.CaptureUpdateBlockEvent;
 import org.bigbluebutton.deskshare.server.events.MouseLocationEvent;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
+
+import java.awt.*;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 
 public class BlockStreamProtocolDecoder extends CumulativeProtocolDecoder {
 	final private Logger log = Red5LoggerFactory.getLogger(BlockStreamProtocolDecoder.class, "deskshare");
