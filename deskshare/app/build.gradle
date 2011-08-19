@@ -1,7 +1,6 @@
 usePlugin 'scala'
 usePlugin 'java'
 usePlugin 'war'
-usePlugin 'idea'
 
 version = '0.71'
 
