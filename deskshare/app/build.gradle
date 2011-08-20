@@ -38,7 +38,7 @@ war.doLast {
 }
 
 task deploy() << {
-    def red5AppsDir = '/Users/tjsingleton/Projects/crunch/red5-0.9.1.svn/dist/webapps'
+    def red5AppsDir = '/usr/share/red5/webapps'
     def deskshareDir = new File("${red5AppsDir}/deskshare")
     println "Deleting $deskshareDir"
     ant.delete(dir: deskshareDir)
