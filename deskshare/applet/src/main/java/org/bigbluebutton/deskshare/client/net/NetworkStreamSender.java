@@ -20,21 +20,18 @@
 package org.bigbluebutton.deskshare.client.net;
 
 import net.jcip.annotations.ThreadSafe;
-
 import org.bigbluebutton.deskshare.client.ExitCode;
 import org.bigbluebutton.deskshare.client.PerformanceListener;
 import org.bigbluebutton.deskshare.client.QueueListener;
 import org.bigbluebutton.deskshare.client.ScreenShareInfo;
 import org.bigbluebutton.deskshare.client.blocks.BlockManager;
-import org.bigbluebutton.deskshare.common.Dimension;
 import org.bigbluebutton.deskshare.client.logging.PerformanceStats;
+import org.bigbluebutton.deskshare.common.Dimension;
 
-import java.util.*;
-import java.util.Arrays.*;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 @ThreadSafe
@@ -118,25 +115,25 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     public boolean connect() {
 	int failedAttempts = 0;
 
-	socketSenders = new NetworkSocketStreamSender[numThreads];
+//	socketSenders = new NetworkSocketStreamSender[numThreads];
 
-	try {
-		NetworkSocket socket = new NetworkSocket(host, port);
+//	try {
+//		NetworkSocket socket = new NetworkSocket(host, port);
 
-	    for (int i = 0; i < numThreads; i++) {
-		try {
+//	    for (int i = 0; i < numThreads; i++) {
+//		try {
 
-		    createSender(i, socket);
-		    numRunningThreads++;
-		} catch (ConnectionException e) {
-		    failedAttempts++;
-		}
-	    }
+//		    createSender(i, socket);
+//		    numRunningThreads++;
+//		} catch (ConnectionException e) {
+//		    failedAttempts++;
+//		}
+//	    }
 
-	} catch (ConnectionException e) {
-	    e.printStackTrace();
+//	} catch (ConnectionException e) {
+//	    e.printStackTrace();
 	    failedAttempts = numThreads;
-	}
+//	}
 
         if ((failedAttempts == numThreads) && httpTunnel) {
             System.out.println(NAME + "Trying http tunneling");
@@ -359,7 +356,6 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
         }
     }
 
-    @Override
     public void networkException(int id, ExitCode reason) {
         try {
             numRunningThreads--;
