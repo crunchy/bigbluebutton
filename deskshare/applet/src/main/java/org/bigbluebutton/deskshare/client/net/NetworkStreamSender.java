@@ -59,341 +59,341 @@ public class NetworkStreamSender implements NextBlockRetriever, NetworkStreamLis
     private PerformanceListener performanceListener;
     private final SequenceNumberGenerator seqNumGenerator = new SequenceNumberGenerator();
     private PerformanceStats perfStats = PerformanceStats.getInstance();
-    
+
     public NetworkStreamSender(BlockManager blockManager, String host, int port,
-        String room, Dimension screenDim, Dimension blockDim, boolean httpTunnel) {
-        blockDataQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
+			       String room, Dimension screenDim, Dimension blockDim, boolean httpTunnel) {
+	blockDataQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
 
-        this.blockManager = blockManager;
-        this.host = host;
-        this.port = port;
-        this.room = room;
-        this.screenDim = screenDim;
-        this.blockDim = blockDim;
-        this.httpTunnel = httpTunnel;
+	this.blockManager = blockManager;
+	this.host = host;
+	this.port = port;
+	this.room = room;
+	this.screenDim = screenDim;
+	this.blockDim = blockDim;
+	this.httpTunnel = httpTunnel;
 
 
-        numThreads = ScreenShareInfo.NETWORK_SENDER_COUNT;
-        System.out.println(NAME + "Starting up " + numThreads + " sender threads.");
-        executor = Executors.newFixedThreadPool(numThreads);
+	numThreads = ScreenShareInfo.NETWORK_SENDER_COUNT;
+	System.out.println(NAME + "Starting up " + numThreads + " sender threads.");
+	executor = Executors.newFixedThreadPool(numThreads);
     }
 
     public void addNetworkConnectionListener(NetworkConnectionListener listener) {
-        this.listener = listener;
+	this.listener = listener;
     }
-    
+
     public void addQueueListener(QueueListener queueListener) {
-        this.queueListener = queueListener;
+	this.queueListener = queueListener;
     }
 
     public void addPerformanceListener(PerformanceListener performanceListener) {
-        this.performanceListener = performanceListener;
+	this.performanceListener = performanceListener;
     }
 
     private void notifyNetworkConnectionListener(ExitCode reason) {
-        if (listener != null) {
-            listener.networkConnectionException(reason);
-        }
+	if (listener != null) {
+	    listener.networkConnectionException(reason);
+	}
     }
-    
+
     private void notifyQueueListener(int queueSize) {
-        if (queueListener != null) {
-            if (queueSize == 0) { 
-                queueListener.onQueueCleared();
-            } else {
-                queueListener.onQueueBackedup(queueSize);
-            }
-        }
+	if (queueListener != null) {
+	    if (queueSize == 0) {
+		queueListener.onQueueCleared();
+	    } else {
+		queueListener.onQueueBackedup(queueSize);
+	    }
+	}
     }
-    
+
     private void notifyPerformanceListener(boolean slow) {
-        if (performanceListener != null) {
-            performanceListener.onSlowPerformance(slow);
-        }
+	if (performanceListener != null) {
+	    performanceListener.onSlowPerformance(slow);
+	}
     }
 
     public boolean connect() {
 	int failedAttempts = 0;
 
-//	socketSenders = new NetworkSocketStreamSender[numThreads];
+	socketSenders = new NetworkSocketStreamSender[numThreads];
 
-//	try {
-//		NetworkSocket socket = new NetworkSocket(host, port);
+	try {
+	    NetworkSocket socket = new NetworkSocket(host, port);
 
-//	    for (int i = 0; i < numThreads; i++) {
-//		try {
+	    for (int i = 0; i < numThreads; i++) {
+		try {
 
-//		    createSender(i, socket);
-//		    numRunningThreads++;
-//		} catch (ConnectionException e) {
-//		    failedAttempts++;
-//		}
-//	    }
+		    createSender(i, socket);
+		    numRunningThreads++;
+		} catch (ConnectionException e) {
+		    failedAttempts++;
+		}
+	    }
 
-//	} catch (ConnectionException e) {
-//	    e.printStackTrace();
+	} catch (ConnectionException e) {
+	    e.printStackTrace();
 	    failedAttempts = numThreads;
-//	}
+	}
 
-        if ((failedAttempts == numThreads) && httpTunnel) {
-            System.out.println(NAME + "Trying http tunneling");
-            failedAttempts = 0;
-            numRunningThreads = 0;
-            if (tryHttpTunneling()) {
-                tunneling = true;
-                System.out.println(NAME + "Will use http tunneling");
-                httpSenders = new NetworkHttpStreamSender[numThreads];
-                for (int i = 0; i < numThreads; i++) {
-                    try {
-                        createHttpSender(i);
-                        numRunningThreads++;
-                    } catch (ConnectionException e) {
-                        failedAttempts++;
-                    }
-                }
-                return failedAttempts != numThreads;
-            }
-        } else {
-            if (numRunningThreads != numThreads) {
-                try {
-                    stop();
-                } catch (ConnectionException e) {
-                    e.printStackTrace();
-                }
-                return false;
-            } else {
-                return true;
-            }
-        }
-        System.out.println(NAME + "Http tunneling failed.");
-        return false;
+	if ((failedAttempts == numThreads) && httpTunnel) {
+	    System.out.println(NAME + "Trying http tunneling");
+	    failedAttempts = 0;
+	    numRunningThreads = 0;
+	    if (tryHttpTunneling()) {
+		tunneling = true;
+		System.out.println(NAME + "Will use http tunneling");
+		httpSenders = new NetworkHttpStreamSender[numThreads];
+		for (int i = 0; i < numThreads; i++) {
+		    try {
+			createHttpSender(i);
+			numRunningThreads++;
+		    } catch (ConnectionException e) {
+			failedAttempts++;
+		    }
+		}
+		return failedAttempts != numThreads;
+	    }
+	} else {
+	    if (numRunningThreads != numThreads) {
+		try {
+		    stop();
+		} catch (ConnectionException e) {
+		    e.printStackTrace();
+		}
+		return false;
+	    } else {
+		return true;
+	    }
+	}
+	System.out.println(NAME + "Http tunneling failed.");
+	return false;
     }
 
     private void createSender(int i, NetworkSocket socket) throws ConnectionException {
-        socketSenders[i] = new NetworkSocketStreamSender(i, this, room, screenDim, blockDim, seqNumGenerator);
-        socketSenders[i].addListener(this);
-        socketSenders[i].connect(socket);
+	socketSenders[i] = new NetworkSocketStreamSender(i, this, room, screenDim, blockDim, seqNumGenerator);
+	socketSenders[i].addListener(this);
+	socketSenders[i].connect(socket);
     }
 
     private void createHttpSender(int i) throws ConnectionException {
-        httpSenders[i] = new NetworkHttpStreamSender(i, this, room, screenDim, blockDim, seqNumGenerator);
-        httpSenders[i].addListener(this);
-        httpSenders[i].connect(host);
+	httpSenders[i] = new NetworkHttpStreamSender(i, this, room, screenDim, blockDim, seqNumGenerator);
+	httpSenders[i].addListener(this);
+	httpSenders[i].connect(host);
     }
 
     /**
      * this examines the block data queue for messages that may include the same blocks
      * and discards any dupe blocks
      * todo: refactor this nastiness
-    */
+     */
     private synchronized void purgeBlockDataQ() {
-        Message message, nextMessage;
-        BlockMessage blockMessage, nextBlockMessage;
-        Integer[] blocks, nextBlocks;
-        boolean skipMessage = false;
-        int currentMessage = 0;
-        LinkedBlockingQueue<Message> cloneQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
-        AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+	Message message, nextMessage;
+	BlockMessage blockMessage, nextBlockMessage;
+	Integer[] blocks, nextBlocks;
+	boolean skipMessage = false;
+	int currentMessage = 0;
+	LinkedBlockingQueue<Message> cloneQ = new LinkedBlockingQueue<Message>(ScreenShareInfo.MAX_QUEUED_MESSAGES);
+	AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
-        Iterator it = blockDataQ.iterator();
-        while (it.hasNext()) {
-            message = (Message)it.next();
-            skipMessage = false;
-            ++currentMessage;
-            
-            // we only care about block messages that are keyframes
-            // and have another block message after them
-            // to dedupe against
-            if (!(   message.isBlockMessage() && 
-                     ((BlockMessage)message).getForceKeyFrame()) &&
-                     it.hasNext()) {
-                continue;
-            }
+	Iterator it = blockDataQ.iterator();
+	while (it.hasNext()) {
+	    message = (Message)it.next();
+	    skipMessage = false;
+	    ++currentMessage;
 
-            blockMessage = (BlockMessage)message;
-            blocks = blockMessage.getBlocks();
-            
-            // look at the next block message to see if it overlaps with this one
-            nextMessage = null;
-            while (it.hasNext()) {
-                nextMessage = (Message)it.next();
-                if (!nextMessage.isBlockMessage()) {
-                    nextMessage = null;
-                    continue;
-                }
-            } 
+	    // we only care about block messages that are keyframes
+	    // and have another block message after them
+	    // to dedupe against
+	    if (!(   message.isBlockMessage() &&
+		    ((BlockMessage)message).getForceKeyFrame()) &&
+		    it.hasNext()) {
+		continue;
+	    }
 
-            // now compare the blocks between this msg and the next block message
-            if (nextMessage != null) {
-                nextBlockMessage = (BlockMessage)nextMessage;
-                nextBlocks = nextBlockMessage.getBlocks();
-                    
-                // exactly the same? ditch the whole message
-                if (nextBlockMessage.hasSameBlocksAs(blockMessage)) {
-                    skipMessage = true;
-                } else { 
-                    // not exactly the same? See if we can prune dupe blocks
-                    blockMessage.discardBlocksSharedWith(nextBlockMessage);
-                    skipMessage = (nextBlockMessage.isEmpty());
-                }
-            }
-            
-            // if the current message must be retained, put it on the clone queue
-            if (skipMessage) {
-                continue;
-            }
-            try {
-                cloneQ.put(message);
-            } catch (InterruptedException e) {
-                // System.out.println("Can't put message on clone queue");
-            }
-        }
-        
-        // we've looked at the whole queue, so time to swap in clone for real queue
-        try {
-            blockDataQ.clear();
-            for (Message cloneMessage: cloneQ) {
-                blockDataQ.put(cloneMessage);
-            } 
-        } catch(InterruptedException e) {
-            // System.out.println("Can't dump clone queue into queue");
-        }
+	    blockMessage = (BlockMessage)message;
+	    blocks = blockMessage.getBlocks();
+
+	    // look at the next block message to see if it overlaps with this one
+	    nextMessage = null;
+	    while (it.hasNext()) {
+		nextMessage = (Message)it.next();
+		if (!nextMessage.isBlockMessage()) {
+		    nextMessage = null;
+		    continue;
+		}
+	    }
+
+	    // now compare the blocks between this msg and the next block message
+	    if (nextMessage != null) {
+		nextBlockMessage = (BlockMessage)nextMessage;
+		nextBlocks = nextBlockMessage.getBlocks();
+
+		// exactly the same? ditch the whole message
+		if (nextBlockMessage.hasSameBlocksAs(blockMessage)) {
+		    skipMessage = true;
+		} else {
+		    // not exactly the same? See if we can prune dupe blocks
+		    blockMessage.discardBlocksSharedWith(nextBlockMessage);
+		    skipMessage = (nextBlockMessage.isEmpty());
+		}
+	    }
+
+	    // if the current message must be retained, put it on the clone queue
+	    if (skipMessage) {
+		continue;
+	    }
+	    try {
+		cloneQ.put(message);
+	    } catch (InterruptedException e) {
+		// System.out.println("Can't put message on clone queue");
+	    }
+	}
+
+	// we've looked at the whole queue, so time to swap in clone for real queue
+	try {
+	    blockDataQ.clear();
+	    for (Message cloneMessage: cloneQ) {
+		blockDataQ.put(cloneMessage);
+	    }
+	} catch(InterruptedException e) {
+	    // System.out.println("Can't dump clone queue into queue");
+	}
 
     }
-    
+
     public void send(Message message) {
-        try {
-            // force keyframe? ditch all the other messages on the queue 
-            // since this message will overwrite everything
-            if (message.isBlockMessage() && ((BlockMessage)message).getForceKeyFrame()) {
-                blockDataQ.clear();
-                notifyQueueListener(0);
-            }
-            // stick message on queue
-            blockDataQ.put(message);
-            
-            // if the queue is backed up, purge it of duplicate blocks
-            int qSizeInBlocks = getQueueSizeInBlocks();
-            if (qSizeInBlocks > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
-                if (ScreenShareInfo.getPurgeBackedUpQueue()) {
-                    purgeBlockDataQ();
-                }
-                notifyQueueListener(qSizeInBlocks);
-            }
-            
-            // if we're being slow, notify also
-            if (ScreenShareInfo.adjustPauseFromQueueSize && perfStats.isSlow()) {
-                notifyPerformanceListener(true);
-            }
-            
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        }
+	try {
+	    // force keyframe? ditch all the other messages on the queue
+	    // since this message will overwrite everything
+	    if (message.isBlockMessage() && ((BlockMessage)message).getForceKeyFrame()) {
+		blockDataQ.clear();
+		notifyQueueListener(0);
+	    }
+	    // stick message on queue
+	    blockDataQ.put(message);
+
+	    // if the queue is backed up, purge it of duplicate blocks
+	    int qSizeInBlocks = getQueueSizeInBlocks();
+	    if (qSizeInBlocks > ScreenShareInfo.MAX_QUEUE_SIZE_FOR_PAUSE) {
+		if (ScreenShareInfo.getPurgeBackedUpQueue()) {
+		    purgeBlockDataQ();
+		}
+		notifyQueueListener(qSizeInBlocks);
+	    }
+
+	    // if we're being slow, notify also
+	    if (ScreenShareInfo.adjustPauseFromQueueSize && perfStats.isSlow()) {
+		notifyPerformanceListener(true);
+	    }
+
+	} catch (InterruptedException e){
+	    e.printStackTrace();
+	}
     }
 
     public void start() {
-        System.out.println(NAME + "Starting network sender.");
-        if (tunneling) {
-            for (int i = 0; i < numRunningThreads; i++) {
-                httpSenders[i].sendStartStreamMessage();
-                executor.execute(httpSenders[i]);
-            }
-        } else {
-            for (int i = 0; i < numRunningThreads; i++) {
-                try {
-                    socketSenders[i].sendStartStreamMessage();
-                    executor.execute(socketSenders[i]);
-                } catch (ConnectionException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        stopped = false;
+	System.out.println(NAME + "Starting network sender.");
+	if (tunneling) {
+	    for (int i = 0; i < numRunningThreads; i++) {
+		httpSenders[i].sendStartStreamMessage();
+		executor.execute(httpSenders[i]);
+	    }
+	} else {
+	    for (int i = 0; i < numRunningThreads; i++) {
+		try {
+		    socketSenders[i].sendStartStreamMessage();
+		    executor.execute(socketSenders[i]);
+		} catch (ConnectionException e) {
+		    e.printStackTrace();
+		}
+	    }
+	}
+	stopped = false;
     }
 
     public void stop() throws ConnectionException {
-        stopped = true;
-        System.out.println(NAME + "Stopping network sender");
-        for (int i = 0; i < numRunningThreads; i++) {
-            if (tunneling) {
-                httpSenders[i].disconnect();
-            } else {
-                socketSenders[i].disconnect();
-            }
-        }
-        executor.shutdownNow();
-        httpSenders = null;
-        socketSenders = null;
+	stopped = true;
+	System.out.println(NAME + "Stopping network sender");
+	for (int i = 0; i < numRunningThreads; i++) {
+	    if (tunneling) {
+		httpSenders[i].disconnect();
+	    } else {
+		socketSenders[i].disconnect();
+	    }
+	}
+	executor.shutdownNow();
+	httpSenders = null;
+	socketSenders = null;
     }
 
     private boolean tryHttpTunneling() {
-        NetworkHttpStreamSender httpSender = new NetworkHttpStreamSender(0, this, room, screenDim, blockDim, seqNumGenerator);
-        try {
-            httpSender.connect(host);
-            return true;
-        } catch (ConnectionException e) {
-            System.out.println(NAME + "Problem connecting to " + host);
-        }
-        return false;
+	NetworkHttpStreamSender httpSender = new NetworkHttpStreamSender(0, this, room, screenDim, blockDim, seqNumGenerator);
+	try {
+	    httpSender.connect(host);
+	    return true;
+	} catch (ConnectionException e) {
+	    System.out.println(NAME + "Problem connecting to " + host);
+	}
+	return false;
     }
 
     public void blockSent(int position) {
-        blockManager.blockSent(position);
+	blockManager.blockSent(position);
     }
 
     public EncodedBlockData getBlockToSend(int position) {
-        return blockManager.getBlock(position).encode();
+	return blockManager.getBlock(position).encode();
     }
 
     public Message getNextMessageToSend() throws InterruptedException {
-        try {
-            return blockDataQ.take();
-        } catch (InterruptedException e) {
-            if (!stopped) {
-                e.printStackTrace();
-            }
-            throw e;
-        }
+	try {
+	    return blockDataQ.take();
+	} catch (InterruptedException e) {
+	    if (!stopped) {
+		e.printStackTrace();
+	    }
+	    throw e;
+	}
     }
 
     public void networkException(int id, ExitCode reason) {
-        try {
-            numRunningThreads--;
-            if (tunneling) {
-                // httpSenders[id].disconnect();
-                System.out.println(NAME + "Failed to use http tunneling. Stopping.");
-                stop();
-                notifyNetworkConnectionListener(reason);
-            } else {
-                socketSenders[id].disconnect();
-            }
-            if (numRunningThreads < 1) {
-                System.out.println(NAME + "No more sender threads. Stopping.");
-                stop();
-                notifyNetworkConnectionListener(reason);
-            } else {
-                System.out.println(NAME + "Sender thread stopped. " + numRunningThreads + " sender threads remaining.");
-            }
-        } catch (ConnectionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            if (numRunningThreads < 1) {
-                System.out.println(NAME + "No more sender threads. Stopping.");
-                notifyNetworkConnectionListener(reason);
-            } else {
-                System.out.println(NAME + "Sender thread stopped. " + numRunningThreads + " sender threads remaining.");
-            }
-        }
+	try {
+	    numRunningThreads--;
+	    if (tunneling) {
+		// httpSenders[id].disconnect();
+		System.out.println(NAME + "Failed to use http tunneling. Stopping.");
+		stop();
+		notifyNetworkConnectionListener(reason);
+	    } else {
+		socketSenders[id].disconnect();
+	    }
+	    if (numRunningThreads < 1) {
+		System.out.println(NAME + "No more sender threads. Stopping.");
+		stop();
+		notifyNetworkConnectionListener(reason);
+	    } else {
+		System.out.println(NAME + "Sender thread stopped. " + numRunningThreads + " sender threads remaining.");
+	    }
+	} catch (ConnectionException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	    if (numRunningThreads < 1) {
+		System.out.println(NAME + "No more sender threads. Stopping.");
+		notifyNetworkConnectionListener(reason);
+	    } else {
+		System.out.println(NAME + "Sender thread stopped. " + numRunningThreads + " sender threads remaining.");
+	    }
+	}
     }
-    
+
     // utility function, remove me
     private int getQueueSizeInBlocks() {
-        int numBlocks = 0;
-        for (Message message: blockDataQ) {
-            if (message.isBlockMessage()) {
-                numBlocks += ((BlockMessage)message).size();
-            }
-        }
-        return numBlocks;
+	int numBlocks = 0;
+	for (Message message: blockDataQ) {
+	    if (message.isBlockMessage()) {
+		numBlocks += ((BlockMessage)message).size();
+	    }
+	}
+	return numBlocks;
     }
 }
