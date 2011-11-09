@@ -29,6 +29,7 @@
     <mate:Listener type="{AppletStartedEvent.APPLET_STARTED}" method="onAppletStart"/>
     <mate:Listener type="{ViewStreamEvent.START}" method="onViewStreamStart"/>
     <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
+    <mate:Listener type="{ResizeEvent.RESIZE}" method="onResize"/>
 
 
 
@@ -36,6 +37,7 @@
         <![CDATA[
         import mx.core.UIComponent;
         import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
 
         import org.bigbluebutton.modules.deskshare.services.DeskshareService;
         import org.bigbluebutton.modules.deskshare.events.AppletStartedEvent;
@@ -53,7 +55,6 @@
 
         private var host:String;
         private var room:String;
-
 
         public function stopViewing():void {
             ns.close();
@@ -191,6 +192,12 @@
             }
 
             return result;
+        }
+
+        private function onResize(event:Event):void {
+            trace("onResize", event);
+            containerRect = new Rectangle(0, 0, parent.width, parent.height);
+            resizeVideo(containerRect);
         }
         ]]>
     </mx:Script>
