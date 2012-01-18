@@ -60,6 +60,10 @@
             ns.close();
         }
 
+        public function closeFS():void {
+            stage.displayState = StageDisplayState.NORMAL;
+        }
+
         private function onApplicationComplete(event:FlexEvent):void {
             trace("onApplicationComplete");
             var p:Object = application.parameters;
@@ -72,6 +76,7 @@
             containerRect = new Rectangle(0, 0, parent.width, parent.height);
             service.connect(host + "/" + room);
             stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
+            ExternalInterface.addCallback('closeFS', closeFS);
         }
 
 
