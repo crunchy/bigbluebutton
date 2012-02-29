@@ -32,6 +32,34 @@
     <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
     <mx:Script>
         <![CDATA[
+//        * Connection delegates to NetConnection: Provides wrapper for connecting and events
+//        * DeskShareService: Proxy to server interactions via SO
+//        * DeskshareStandalone: App initialize and GUI
+//
+//        Server init events:        | Flash
+//          * deskshareStreamStopped | ViewStreamEvent.STOP
+//          * appletStarted          | AppletStartedEvent.APPLET_STARTED
+//          * mouseLocationCallback  | CursorEvent.UPDATE_CURSOR_LOC_EVENT
+//
+//        Flash init events:         | Server
+//          * startViewing           | NOOP
+//          * stopViewing            | NOOP
+//
+//        Server methods:
+//          checkIfStreamIsPublishing
+//          deskshare.startedToViewStream
+//
+//        Errors:
+//          Connection:
+//            * Security
+//            * Disconnected (Timeout)
+//          NetStream:
+//            * Security
+//            * NetStatus
+//            * AsyncError
+//            * IOError
+//          Responder error
+
         import com.crunchconnect.ErrorListener;
         import com.crunchconnect.ErrorReporter;
 

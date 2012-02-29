@@ -40,7 +40,7 @@ public class Connection extends EventDispatcher {
     public static const SECURITYERROR:String = "securityError";
     public static const DISCONNECTED:String = "disconnected";
 
-    private static const CONNECTION_TIMEOUT:int = 15000;
+    private static const CONNECTION_TIMEOUT:int = 10000;
 
     private var nc:NetConnection;
     private var uri:String;
