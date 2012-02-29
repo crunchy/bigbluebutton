@@ -180,7 +180,7 @@ public class DeskshareService {
 
     // called from responder for checkIfStreamIsPublishing when error
     private function onStreamIsPublishingResultError(status:Object):void {
-        var event = new ConnectionEvent(Connection.DISCONNECTED, true, false, "Error while trying to call remote method on server");
+        var event:ConnectionEvent = new ConnectionEvent(Connection.DISCONNECTED, true, false, "Error while trying to call remote method on server");
         errorListener.onError(event);
     }
 
