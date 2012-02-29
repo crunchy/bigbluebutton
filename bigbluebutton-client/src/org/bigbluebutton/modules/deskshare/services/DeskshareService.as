@@ -19,16 +19,21 @@
 package org.bigbluebutton.modules.deskshare.services {
 
 import com.asfusion.mate.events.Dispatcher;
+import com.crunchconnect.ErrorListener;
+import com.crunchconnect.ErrorReporter;
+
+import flash.errors.IOError;
 
 import flash.events.AsyncErrorEvent;
+import flash.events.IOErrorEvent;
 import flash.events.NetStatusEvent;
-
+import flash.events.SecurityErrorEvent;
 import flash.media.Video;
 import flash.net.NetConnection;
 import flash.net.NetStream;
 import flash.net.Responder;
 import flash.net.SharedObject;
-import org.bigbluebutton.common.LogUtil;
+
 import org.bigbluebutton.common.red5.Connection;
 import org.bigbluebutton.common.red5.ConnectionEvent;
 import org.bigbluebutton.modules.deskshare.events.AppletStartedEvent;
@@ -41,76 +46,94 @@ import org.bigbluebutton.modules.deskshare.events.ViewStreamEvent;
  *
  */
 public class DeskshareService {
-    private var conn:Connection;
-    private var nc:NetConnection;
-    private var deskSO:SharedObject;
     private var responder:Responder;
     private var dispatcher:Dispatcher;
 
-    private var uri:String;
-    private var width:Number;
-    private var height:Number;
+    private var conn:Connection;
+    private var nc:NetConnection;
     private var ns:NetStream;
-    private var room:String;
+    private var deskSO:SharedObject;
+
+    private var uri:String;
+    private var errorListener:ErrorListener;
 
     public function DeskshareService() {
-        this.dispatcher = new Dispatcher();
+        dispatcher = new Dispatcher();
+        responder = new Responder(onStreamIsPublishingResult, onStreamIsPublishingResultError);
     }
 
-    public function handleStartModuleEvent(module:DeskShareModule):void {
-        trace("Deskshare Module starting");
-        connect(module.uri);
-    }
-
+    // Public
     public function connect(uri:String):void {
         this.uri = uri;
         trace("Deskshare Service connecting to " + uri);
+
         conn = new Connection();
         conn.addEventListener(Connection.SUCCESS, connectionSuccessHandler);
-        conn.addEventListener(Connection.DISCONNECTED, connectionFailedHandler);
+        conn.addEventListener(Connection.DISCONNECTED, errorListener.onError);
+        conn.addEventListener(Connection.SECURITYERROR, errorListener.onError);
         conn.setURI(uri);
         conn.connect();
-
-        responder = new Responder(
-                function (result:Object):void {
-                    trace("Responder")
-                    if (result != null && (result.publishing as Boolean)) {
-                        width = result.width as Number;
-                        height = result.height as Number;
-                        LogUtil.debug("Desk Share stream is streaming [" + width + "," + height + "]");
-                        var event:ViewStreamEvent = new ViewStreamEvent(ViewStreamEvent.START);
-                        event.videoWidth = width;
-                        event.videoHeight = height;
-                        dispatcher.dispatchEvent(event);
-                    } else {
-                        trace("No deskshare stream being published");
-                    }
-                },
-                function (status:Object):void {
-                    trace("Error while trying to call remote mathod on server");
-                }
-        );
     }
 
-    public function disconnect():void {
-        if (nc != null) nc.close();
+    public function initializeErrorHandler(errorReporter:ErrorReporter):void {
+        errorListener = new ErrorListener(errorReporter);
     }
-
 
     public function attachVideo(video:Video, room:String):void {
-        ns = new NetStream(getConnection());
-//            ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
-//            ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+        ns = new NetStream(nc);
+        ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+        ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, errorListener.onError);
+        ns.addEventListener(SecurityErrorEvent.SECURITY_ERROR, errorListener.onError);
+        ns.addEventListener(IOErrorEvent.IO_ERROR, errorListener.onError);
         ns.client = this;
         ns.bufferTime = 0;
         ns.receiveVideo(true);
         ns.receiveAudio(false);
-        this.room = room;
         ns.play(room);
+
         video.attachNetStream(ns);
     }
 
+    // Triggers keyframe on red5. Public via BBB.
+    public function sendStartedViewingNotification():void {
+        trace("Sending start viewing to server");
+        nc.call("deskshare.startedToViewStream", null);
+    }
 
+
+    // EVENT HANDLERS
+    // Connection connected - Setup SO, remote call to check stream
+    /**
+     * Called by server when client connects.
+     */
+    public function onBWDone():void {
+        trace('onBWDone');
+        // do nothing
+    }
+
+    // SO Handler - triggered in Red5
+    public function appletStarted(videoWidth:Number, videoHeight:Number):void {
+        trace("Got applet started", videoWidth, videoHeight);
+        var event:AppletStartedEvent = new AppletStartedEvent();
+        event.videoWidth = videoWidth;
+        event.videoHeight = videoHeight;
+        dispatcher.dispatchEvent(event);
+    }
+
+    // SO Handler - triggered in Red5
+    public function deskshareStreamStopped():void {
+        trace("Received deskshareStreamStopped");
+        dispatcher.dispatchEvent(new ViewStreamEvent(ViewStreamEvent.STOP));
+        ns.close();
+    }
+
+    // SO Handler - triggered in Red5
+    public function mouseLocationCallback(x:Number, y:Number):void {
+        var event:CursorEvent = new CursorEvent(CursorEvent.UPDATE_CURSOR_LOC_EVENT);
+        event.x = x;
+        event.y = y;
+        dispatcher.dispatchEvent(event);
+    }
 
     private function connectionSuccessHandler(e:ConnectionEvent):void {
         trace("Successully connection to " + uri);
@@ -120,61 +143,60 @@ public class DeskshareService {
         deskSO.client = this;
         deskSO.connect(nc);
 
-        checkIfStreamIsPublishing();
+        trace("checking if desk share stream is publishing");
+        nc.call("deskshare.checkIfStreamIsPublishing", responder);
     }
 
+    private function onNetStatus(e:NetStatusEvent):void {
+        switch (e.info.code) {
+            case "NetStream.Play.Start":
+                trace("NetStream.Publish.Start for broadcast stream");
+                sendStartedViewingNotification();
+                break;
+
+            case "NetStream.Play.UnpublishNotify":
+                trace("NetStream.Play.UnpublishNotify for broadcast stream");
+                deskshareStreamStopped();
+                break;
+        }
+        
+        if (e.info.level == "error") {
+            errorListener.onError(e);
+        }
+    }
+
+    // called from responder for checkIfStreamIsPublishing
+    private function onStreamIsPublishingResult(result:Object):void {
+        trace("Responder");
+        if (result != null && (result.publishing as Boolean)) {
+            var width:Number = result.width as Number;
+            var height:Number = result.height as Number;
+
+            appletStarted(width, height)
+        } else {
+            trace("No deskshare stream being published");
+        }
+    }
+
+    // called from responder for checkIfStreamIsPublishing when error
+    private function onStreamIsPublishingResultError(status:Object):void {
+        var event = new ConnectionEvent(Connection.DISCONNECTED, true, false, "Error while trying to call remote method on server");
+        errorListener.onError(event);
+    }
+
+
+    // used in BBB proper, needed to compile ==================== [AND BELOW!!!]
     public function getConnection():NetConnection {
         return nc;
     }
 
-    public function connectionFailedHandler(e:ConnectionEvent):void {
-        trace("connection failed to " + uri + " with message " + e.code);
-        dispatcher.dispatchEvent(e);
+    public function handleStartModuleEvent(module:DeskShareModule):void {
+        trace("Deskshare Module starting");
+        connect(module.uri);
     }
 
-    /**
-     * Called by server when client connects.
-     */
-    public function onBWDone():void {
-        trace('onBWDone');
-        // do nothing
-    }
-
-    public function appletStarted(videoWidth:Number, videoHeight:Number):void {
-        trace("Got applet started", videoWidth, videoHeight);
-        var event:AppletStartedEvent = new AppletStartedEvent();
-        event.videoWidth = videoWidth;
-        event.videoHeight = videoHeight;
-        dispatcher.dispatchEvent(event);
-    }
-
-    public function deskshareStreamStopped():void {
-        stopViewing();
-    }
-
-    public function mouseLocationCallback(x:Number, y:Number):void {
-        var event:CursorEvent = new CursorEvent(CursorEvent.UPDATE_CURSOR_LOC_EVENT);
-        event.x = x;
-        event.y = y;
-        dispatcher.dispatchEvent(event);
-    }
-
-
-    /**
-     * Call this method to send out a room-wide notification to start viewing the stream
-     *
-     */
-    public function sendStartViewingNotification(captureWidth:Number, captureHeight:Number):void {
-        try {
-            deskSO.send("startViewing", captureWidth, captureHeight);
-        } catch (e:Error) {
-            trace("error while trying to send start viewing notification");
-        }
-    }
-
-    public function sendStartedViewingNotification():void {
-        trace("Sending start viewing to server");
-        nc.call("deskshare.startedToViewStream", null);
+    public function disconnect():void {
+        if (nc != null) nc.close();
     }
 
     /**
@@ -188,66 +210,20 @@ public class DeskshareService {
         var event:ViewStreamEvent = new ViewStreamEvent(ViewStreamEvent.START);
         event.videoWidth = videoWidth;
         event.videoHeight = videoHeight;
+
         dispatcher.dispatchEvent(event);
     }
 
     /**
-     * Sends a notification through the server to all the participants in the room to stop viewing the stream
+     * Call this method to send out a room-wide notification to start viewing the stream
      *
      */
-    public function sendStopViewingNotification():void {
-        trace("Sending stop viewing notification to other clients.");
+    public function sendStartViewingNotification(captureWidth:Number, captureHeight:Number):void {
         try {
-            deskSO.send("stopViewing");
+            deskSO.send("startViewing", captureWidth, captureHeight);
         } catch (e:Error) {
-            trace("could not send stop viewing notification");
+            trace("error while trying to send start viewing notification");
         }
     }
-
-
-    /**
-     * Sends a notification to the module to stop viewing the stream
-     * This method is called on successful execution of sendStopViewingNotification()
-     *
-     */
-    public function stopViewing():void {
-        trace("Received dekskshareStreamStopped");
-        dispatcher.dispatchEvent(new ViewStreamEvent(ViewStreamEvent.STOP));
-        ns.close();
-    }
-
-    /**
-     * Check if anybody is publishing the stream for this room
-     * This method is useful for clients which have joined a room where somebody is already publishing
-     *
-     */
-    private function checkIfStreamIsPublishing():void {
-        trace("checking if desk share stream is publishing");
-        nc.call("deskshare.checkIfStreamIsPublishing", responder);
-    }
-
-    public function calculateEncodingDimensions(captureWidth:Number, captureHeight:Number):void {
-        height = captureHeight;
-        width = captureWidth;
-    }
-
-    private function onAsyncError(e:AsyncErrorEvent):void {
-        trace("VideoWindow::asyncerror " + e.toString());
-    }
-
-    private function onNetStatus(e:NetStatusEvent):void {
-        switch (e.info.code) {
-            case "NetStream.Play.Start":
-                trace("NetStream.Publish.Start for broadcast stream " + room);
-                trace("Dispatching start viewing event");
-                sendStartedViewingNotification();
-                break;
-            case "NetStream.Play.UnpublishNotify":
-                trace("NetStream.Play.UnpublishNotify for broadcast stream " + room);
-                stopViewing();
-                break;
-        }
-    }
-
 }
 }

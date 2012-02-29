@@ -26,13 +26,13 @@
                 width="100%" height="100%"
                 layout="absolute">
     <mate:Listener type="{FlexEvent.APPLICATION_COMPLETE}" method="onApplicationComplete"/>
-    <mate:Listener type="{AppletStartedEvent.APPLET_STARTED}" method="onAppletStart"/>
-    <mate:Listener type="{ViewStreamEvent.START}" method="onViewStreamStart"/>
-    <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
     <mate:Listener type="{ResizeEvent.RESIZE}" method="onResize"/>
 
+    <mate:Listener type="{AppletStartedEvent.APPLET_STARTED}" method="onVideoStart"/>
+    <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
     <mx:Script>
         <![CDATA[
+        import com.crunchconnect.ErrorListener;
         import com.crunchconnect.ErrorReporter;
 
         import mx.core.UIComponent;
@@ -41,7 +41,6 @@
 
         import org.bigbluebutton.modules.deskshare.events.AppletStartedEvent;
         import org.bigbluebutton.modules.deskshare.events.CursorEvent;
-        import org.bigbluebutton.modules.deskshare.events.ViewStreamEvent;
         import org.bigbluebutton.modules.deskshare.services.DeskshareService;
 
         private var service:DeskshareService = new DeskshareService();
@@ -55,6 +54,13 @@
 
         private var host:String;
         private var room:String;
+
+//        PUBLIC
+        public function closeFS():void {
+            stage.displayState = StageDisplayState.NORMAL;
+        }
+
+//        EVENT HANDLERS
         private function onApplicationComplete(event:FlexEvent):void {
             trace("onApplicationComplete");
             var p:Object = application.parameters;
@@ -66,26 +72,19 @@
                 host:p.ERROR_HOST, room_id:p.ROOM_ID, room_type:p.ROOM_TYPE, user_id:p.USER_ID, ip:p.IP
             });
 
-
-            trace('fullscreen.visible', p.SHOW_FULL_SCREEN);
-            fullscreen.visible = String(p.SHOW_FULL_SCREEN) == "true";
-
             containerRect = new Rectangle(0, 0, parent.width, parent.height);
+
+            service.initializeErrorHandler(errorReporter);
             service.connect(host + "/" + room);
-            stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
-            ExternalInterface.addCallback('closeFS', closeFS);
+
+            setupFullscreenVideo(p.FULL_SCREEN);
+            buildVideoHolder();
         }
 
-
-        private function onViewStreamStart(event:ViewStreamEvent):void {
+        private function onVideoStart(event:AppletStartedEvent):void {
             trace("onViewStreamStart", event.videoWidth, event.videoHeight);
-            startVideo(event.videoWidth, event.videoHeight);
-        }
-
-        // Fired when a region is shared
-        private function onAppletStart(event:AppletStartedEvent):void {
-            trace("onAppletStart", event.videoWidth, event.videoHeight);
-            startVideo(event.videoWidth, event.videoHeight);
+            videoRect = new Rectangle(0, 0, event.videoWidth, event.videoHeight);
+            buildVideo();
         }
 
         private function onUpdateCursorEvent(event:CursorEvent):void {
@@ -100,6 +99,20 @@
             cursorImg.y = newY;
         }
 
+        private function onResize(event:Event):void {
+            trace("onResize", event);
+            containerRect = new Rectangle(0, 0, parent.width, parent.height);
+            resizeVideo(containerRect);
+        }
+
+        private function onToggleFullscreen():void {
+            if (stage.displayState != StageDisplayState.FULL_SCREEN) {
+                stage.displayState = StageDisplayState.FULL_SCREEN;
+            } else {
+                stage.displayState = StageDisplayState.NORMAL;
+            }
+        }
+
         private function onFullScreen(event:FullScreenEvent):void {
             trace("onFullScreen", event);
             if (event.fullScreen) {
@@ -112,32 +125,19 @@
             }
         }
 
-        public function stopViewing():void {
-            service.stopViewing();
+//        PRIVATE
+        // app init
+        private function setupFullscreenVideo(showFS:Boolean):void {
+            fullscreen.visible = String(showFS) == "true";
+            stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
+            ExternalInterface.addCallback('closeFS', closeFS);            
         }
-
-        public function closeFS():void {
-            stage.displayState = StageDisplayState.NORMAL;
-        }
-
-        private function toggleFullscreen():void {
-            if (stage.displayState != StageDisplayState.FULL_SCREEN) {
-                stage.displayState = StageDisplayState.FULL_SCREEN;
-            } else {
-                stage.displayState = StageDisplayState.NORMAL;
-            }
-        }
-
-        private function startVideo(width:Number, height:Number):void {
-            videoRect = new Rectangle(0, 0, width, height);
-            buildVideoHolder();
-            buildVideo();
-            buildCursor();
-        }
-
+        
+        // app init
         private function buildVideoHolder():void {
             videoHolder = new UIComponent();
             vbox.addChild(videoHolder);
+            videoHolder.addChild(cursorImg);
         }
 
         private function buildVideo():void {
@@ -146,10 +146,6 @@
             service.attachVideo(video, room);
             videoHolder.addChild(video);
             resizeVideo(containerRect);
-        }
-
-        private function buildCursor():void {
-            videoHolder.addChild(cursorImg);
         }
 
         private function resizeVideo(boundsRect:Rectangle):void {
@@ -173,16 +169,10 @@
 
             return result;
         }
-
-        private function onResize(event:Event):void {
-            trace("onResize", event);
-            containerRect = new Rectangle(0, 0, parent.width, parent.height);
-            resizeVideo(containerRect);
-        }
         ]]>
     </mx:Script>
 
     <mx:Canvas id="vbox" width="100%" height="100%" />
-    <mx:Button id="fullscreen" label="Fullscreen" click="toggleFullscreen();" bottom="0" right="0" visible="false"/>
+    <mx:Button id="fullscreen" label="Fullscreen" click="onToggleFullscreen();" bottom="0" right="0" visible="false"/>
     <mx:Image id="cursorImg" visible="false" source="@Embed('org/bigbluebutton/modules/deskshare/assets/images/cursor4.png')"/>
 </mx:Application>

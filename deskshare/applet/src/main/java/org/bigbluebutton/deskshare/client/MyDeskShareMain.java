@@ -34,7 +34,7 @@ public class MyDeskShareMain implements ClientListener {
 	MyDeskShareMain dsMain = new MyDeskShareMain();
 
 	String hostValue = "bbb-staging.crunchconnect.com";
-	String roomId = "mr-4134";
+	String roomId = "mr7";
 	int listenPortValue = DESKSHARE_PORT;
 
 //		cli: host room port (all optional)

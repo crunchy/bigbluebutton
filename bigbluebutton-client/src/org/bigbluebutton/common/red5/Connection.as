@@ -67,7 +67,7 @@ public class Connection extends EventDispatcher {
 
     private function connectionTimerExpired():void {
         if (!nc.connected) {
-            var e:Event = new ConnectionEvent(Connection.DISCONNECTED, false, false, "Connection Timeout Expired");
+            var e:Event = new ConnectionEvent(Connection.DISCONNECTED, true, false, "Connection Timeout Expired");
             dispatchEvent(e);
         }
     }
@@ -151,7 +151,7 @@ public class Connection extends EventDispatcher {
         if (event.info.code != "NetConnection.Connect.Success") {
             // I dispatch DISCONNECTED incase someone just simply wants to know if we're not connected'
             // rather than having to subscribe to the events individually
-            e = new ConnectionEvent(Connection.DISCONNECTED, false, false, event.info.code);
+            e = new ConnectionEvent(Connection.DISCONNECTED, true, false, event.info.code);
             dispatchEvent(e);
         }
     }
