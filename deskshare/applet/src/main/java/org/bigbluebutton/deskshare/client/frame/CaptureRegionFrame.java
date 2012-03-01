@@ -127,6 +127,9 @@ public class CaptureRegionFrame {
         final JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout());
         capturing = false;
+        
+        panel.add(new JLabel("Drag any edge to move the window. Drag any corner to resize it."));
+        
         btnStartStop = new Button("Start Sharing");
         btnStartStop.addActionListener(new ActionListener() {
             @Override
@@ -145,7 +148,6 @@ public class CaptureRegionFrame {
             }
         });
         panel.add(btnStartStop);
-        
         // pulldown menus
         /*
         colorDepthSelect = new JComboBox(colorDepthNames);

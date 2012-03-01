@@ -23,6 +23,7 @@ package org.bigbluebutton.deskshare.client;
 
 import org.bigbluebutton.deskshare.client.frame.CaptureRegionFrame;
 import org.bigbluebutton.deskshare.client.frame.CaptureRegionListener;
+import org.bigbluebutton.deskshare.client.frame.WindowlessFrame;
 
 public class ScreenRegionSharer implements ScreenSharer {
 
@@ -43,7 +44,7 @@ public class ScreenRegionSharer implements ScreenSharer {
 
     public void start() {
         CaptureRegionListener crl = new CaptureRegionListenerImp(this);
-        frame = new CaptureRegionFrame(crl, 5);
+        frame = new CaptureRegionFrame(crl, WindowlessFrame.BORDER_WIDTH);
         frame.setHeight(ssi.captureHeight);
         frame.setWidth(ssi.captureWidth);
         frame.setLocation(ssi.x, ssi.y);

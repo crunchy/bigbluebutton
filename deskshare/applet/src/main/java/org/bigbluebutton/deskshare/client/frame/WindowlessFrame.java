@@ -28,8 +28,9 @@ import java.awt.event.MouseEvent;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class WindowlessFrame implements Serializable {
+public class WindowlessFrame implements Serializable {
     private static final long serialVersionUID = 1L;
+    public static final int BORDER_WIDTH = 10; // border thickness in pixels
 
     private CaptureRegionListener captureRegionListener;
     private MouseAdapter resizingAdapter;
@@ -84,39 +85,34 @@ class WindowlessFrame implements Serializable {
     private Dimension mOverallSize = new Dimension();
 
     // properties initialized during construction
-    private BasicStroke mBorderStroke = new BasicStroke(5, 
+    private BasicStroke mBorderStroke = new BasicStroke(BORDER_WIDTH, 
         BasicStroke.CAP_ROUND, 
         BasicStroke.JOIN_ROUND, 
         0, 
         new float[] { 12, 12 }, 
         0);
-    private final BasicStroke borderSolidStroke = new BasicStroke(5, 
+    private final BasicStroke borderSolidStroke = new BasicStroke(BORDER_WIDTH, 
         BasicStroke.CAP_ROUND, 
         BasicStroke.JOIN_ROUND, 
         0);
     
-    private GradientPaint mGradient = new GradientPaint(0.0f, 
+    private final GradientPaint blueSolid = new GradientPaint(0.0f, 
         0.0f, 
-        Color.red, 
+        Color.blue,
         1.0f, 
         1.0f, 
-        Color.white, 
-        true);
-    private final GradientPaint blueGradient = new GradientPaint(0.0f, 
-        0.0f, 
-        Color.blue, 
-        1.0f, 
-        1.0f, 
-        Color.blue, 
+        Color.blue,
         true);
     private final GradientPaint redGradient = new GradientPaint(0.0f, 
         0.0f, 
-        Color.red, 
+        Color.red,
         1.0f, 
         1.0f, 
-        Color.white, 
+        Color.white,
         true);
     
+    private GradientPaint mGradient = redGradient;
+
     private final int mBorderWidth;
     private final JFrame mWindowFrame;
     private final BarFrame mTopBorder;
@@ -168,6 +164,7 @@ class WindowlessFrame implements Serializable {
         @Override
         public void mousePressed(MouseEvent e) {
             final Point mouse = e.getLocationOnScreen();
+            //System.out.println("Mouse at " + mouse.x + ", " + mouse.y);
             mActionOffset = new Point(mouse.x - mTopLeft.x, mouse.y - mTopLeft.y);
             mMoving.set(true);
             e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
@@ -351,7 +348,7 @@ class WindowlessFrame implements Serializable {
         }
 }
 
-private class VerticalBarFrame extends BarFrame {
+    private class VerticalBarFrame extends BarFrame {
         private static final long serialVersionUID = 1L;
         
         public VerticalBarFrame(JFrame frame, OffsetLocator offsetLocator) {
@@ -369,8 +366,8 @@ private class VerticalBarFrame extends BarFrame {
             return mOverallSize.height;
         }
     }
-
-    public WindowlessFrame(int borderWidth) {
+    
+	public WindowlessFrame(int borderWidth) {
         mBorderWidth = borderWidth;
 
         mWindowFrame = new JFrame("Windowless Frame");
@@ -535,7 +532,7 @@ private class VerticalBarFrame extends BarFrame {
 
     public void changeBorderToBlue() {
         mBorderStroke = borderSolidStroke;
-        mGradient = blueGradient;
+        mGradient = blueSolid;
         repaint();
     }
 
@@ -545,7 +542,7 @@ private class VerticalBarFrame extends BarFrame {
     }
 
     public static void main(String[] args) {
-        final WindowlessFrame wf = new WindowlessFrame(5);
+        final WindowlessFrame wf = new WindowlessFrame(BORDER_WIDTH);
         wf.setHeight(300);
         wf.setWidth(600);
         wf.setLocation(100, 200);
