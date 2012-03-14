@@ -155,12 +155,12 @@
 
 //        PRIVATE
         // app init
-        private function setupFullscreenVideo(showFS:Boolean):void {
+        private function setupFullscreenVideo(showFS:String):void {
             fullscreen.visible = String(showFS) == "true";
             stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
-            ExternalInterface.addCallback('closeFS', closeFS);            
+            ExternalInterface.addCallback('closeFS', closeFS);
         }
-        
+
         // app init
         private function buildVideoHolder():void {
             videoHolder = new UIComponent();
