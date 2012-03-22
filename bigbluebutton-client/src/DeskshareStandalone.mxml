@@ -32,172 +32,174 @@
     <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
     <mx:Script>
         <![CDATA[
-//        * Connection delegates to NetConnection: Provides wrapper for connecting and events
-//        * DeskShareService: Proxy to server interactions via SO
-//        * DeskshareStandalone: App initialize and GUI
-//
-//        Server init events:        | Flash
-//          * deskshareStreamStopped | ViewStreamEvent.STOP
-//          * appletStarted          | AppletStartedEvent.APPLET_STARTED
-//          * mouseLocationCallback  | CursorEvent.UPDATE_CURSOR_LOC_EVENT
-//
-//        Flash init events:         | Server
-//          * startViewing           | NOOP
-//          * stopViewing            | NOOP
-//
-//        Server methods:
-//          checkIfStreamIsPublishing
-//          deskshare.startedToViewStream
-//
-//        Errors:
-//          Connection:
-//            * Security
-//            * Disconnected (Timeout)
-//          NetStream:
-//            * Security
-//            * NetStatus
-//            * AsyncError
-//            * IOError
-//          Responder error
+      //        * Connection delegates to NetConnection: Provides wrapper for connecting and events
+      //        * DeskShareService: Proxy to server interactions via SO
+      //        * DeskshareStandalone: App initialize and GUI
+      //
+      //        Server init events:        | Flash
+      //          * deskshareStreamStopped | ViewStreamEvent.STOP
+      //          * appletStarted          | AppletStartedEvent.APPLET_STARTED
+      //          * mouseLocationCallback  | CursorEvent.UPDATE_CURSOR_LOC_EVENT
+      //
+      //        Flash init events:         | Server
+      //          * startViewing           | NOOP
+      //          * stopViewing            | NOOP
+      //
+      //        Server methods:
+      //          checkIfStreamIsPublishing
+      //          deskshare.startedToViewStream
+      //
+      //        Errors:
+      //          Connection:
+      //            * Security
+      //            * Disconnected (Timeout)
+      //          NetStream:
+      //            * Security
+      //            * NetStatus
+      //            * AsyncError
+      //            * IOError
+      //          Responder error
 
-        import com.crunchconnect.ErrorListener;
-        import com.crunchconnect.ErrorReporter;
+      import com.crunchconnect.ErrorReporter;
 
-        import mx.core.UIComponent;
-        import mx.events.FlexEvent;
-        import mx.events.ResizeEvent;
+      import mx.core.UIComponent;
+      import mx.events.FlexEvent;
+      import mx.events.ResizeEvent;
 
-        import org.bigbluebutton.modules.deskshare.events.AppletStartedEvent;
-        import org.bigbluebutton.modules.deskshare.events.CursorEvent;
-        import org.bigbluebutton.modules.deskshare.services.DeskshareService;
+      import org.bigbluebutton.modules.deskshare.events.AppletStartedEvent;
+      import org.bigbluebutton.modules.deskshare.events.CursorEvent;
+      import org.bigbluebutton.modules.deskshare.services.DeskshareService;
 
-        private var service:DeskshareService = new DeskshareService();
-        private var errorReporter:ErrorReporter;
+      private var service:DeskshareService = new DeskshareService();
+      private var errorReporter:ErrorReporter;
 
-        private var videoHolder:UIComponent;
-        private var video:Video;
+      private var videoHolder:UIComponent;
+      private var video:Video;
 
-        private var containerRect:Rectangle;
-        private var videoRect:Rectangle;
+      private var containerRect:Rectangle;
+      private var videoRect:Rectangle;
 
-        private var host:String;
-        private var room:String;
+      private var host:String;
+      private var room:String;
 
-//        PUBLIC
-        public function closeFS():void {
-            stage.displayState = StageDisplayState.NORMAL;
+      //        PUBLIC
+      public function closeFS():void {
+        stage.displayState = StageDisplayState.NORMAL;
+      }
+
+      //        EVENT HANDLERS
+      private function onApplicationComplete(event:FlexEvent):void {
+        trace("onApplicationComplete");
+        var p:Object = application.parameters;
+
+        host = p.HOST;
+        room = "" + p.ROOM_TYPE + p.ROOM_ID;
+
+        errorReporter = new ErrorReporter({
+          host:p.ERROR_HOST, room_id:p.ROOM_ID, room_type:p.ROOM_TYPE, user_id:p.USER_ID, ip:p.IP
+        });
+
+        containerRect = new Rectangle(0, 0, parent.width, parent.height);
+
+        service.initializeErrorHandler(errorReporter);
+        service.connect(host + "/" + room);
+
+        setupFullscreenVideo(p.FULL_SCREEN);
+        buildVideoHolder();
+      }
+
+      private function onVideoStart(event:AppletStartedEvent):void {
+        trace("onViewStreamStart", event.videoWidth, event.videoHeight);
+        videoRect = new Rectangle(0, 0, event.videoWidth, event.videoHeight);
+        buildVideo();
+      }
+
+      private function onUpdateCursorEvent(event:CursorEvent):void {
+        if (video) {
+          var newX:int = (event.x / video.videoWidth) * video.width;
+          var newY:int = (event.y / video.videoHeight) * video.height;
+
+          cursorImg.visible = true;
+
+          cursorImg.x = newX;
+          cursorImg.y = newY;
+        }
+      }
+
+      private function onResize(event:Event):void {
+        trace("onResize", event);
+        containerRect = new Rectangle(0, 0, parent.width, parent.height);
+        resizeVideo(containerRect);
+      }
+
+      private function onToggleFullscreen():void {
+        if (stage.displayState == StageDisplayState.FULL_SCREEN) {
+          stage.displayState = StageDisplayState.NORMAL;
+        } else {
+          stage.displayState = StageDisplayState.FULL_SCREEN;
+        }
+      }
+
+      private function onFullScreen(event:FullScreenEvent):void {
+        trace("onFullScreen", event);
+        if (event.fullScreen) {
+          fullscreen.visible = false;
+          resizeVideo(new Rectangle(0, 0, stage.fullScreenWidth, stage.fullScreenHeight));
+          stage.fullScreenSourceRect = new Rectangle(video.x, video.y, video.width, video.height);
+        } else {
+          fullscreen.visible = true;
+          resizeVideo(containerRect);
+        }
+      }
+
+      //        PRIVATE
+      // app init
+      private function setupFullscreenVideo(showFS:String):void {
+        fullscreen.visible = String(showFS) == "true";
+        stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
+        ExternalInterface.addCallback('closeFS', closeFS);
+      }
+
+      // app init
+      private function buildVideoHolder():void {
+        videoHolder = new UIComponent();
+        vbox.addChild(videoHolder);
+        videoHolder.addChild(cursorImg);
+      }
+
+      private function buildVideo():void {
+        video = new Video(videoRect.width, videoRect.height);
+        video.smoothing = true;
+        service.attachVideo(video, room);
+        videoHolder.addChild(video);
+        videoHolder.setChildIndex(cursorImg, videoHolder.numChildren -1); // Move cursor on top of video
+        resizeVideo(containerRect);
+      }
+
+      private function resizeVideo(boundsRect:Rectangle):void {
+        if (video) {
+          var updatedSize:Rectangle = scaleRectToFit(videoRect, boundsRect);
+          videoHolder.width = video.width = updatedSize.width;
+          videoHolder.height = video.height = updatedSize.height;
+        }
+      }
+
+      private static function scaleRectToFit(sourceRect:Rectangle, boundsRect:Rectangle):Rectangle {
+        trace("scaleRectToFit", sourceRect, boundsRect);
+        var sourceAspectRatio:Number = (sourceRect.width / sourceRect.height);
+        var targetAspectRatio:Number = (boundsRect.height / boundsRect.width);
+        var result:Rectangle = new Rectangle(0, 0, Math.min(boundsRect.width, sourceRect.width),
+            Math.min(boundsRect.height, sourceRect.height));
+
+        if (targetAspectRatio >= sourceAspectRatio) {
+          result.width = result.height * sourceAspectRatio;
+        } else {
+          result.height = result.width / sourceAspectRatio;
         }
 
-//        EVENT HANDLERS
-        private function onApplicationComplete(event:FlexEvent):void {
-            trace("onApplicationComplete");
-            var p:Object = application.parameters;
-
-            host = p.HOST;
-            room = "" + p.ROOM_TYPE + p.ROOM_ID;
-
-            errorReporter = new ErrorReporter({
-                host:p.ERROR_HOST, room_id:p.ROOM_ID, room_type:p.ROOM_TYPE, user_id:p.USER_ID, ip:p.IP
-            });
-
-            containerRect = new Rectangle(0, 0, parent.width, parent.height);
-
-            service.initializeErrorHandler(errorReporter);
-            service.connect(host + "/" + room);
-
-            setupFullscreenVideo(p.FULL_SCREEN);
-            buildVideoHolder();
-        }
-
-        private function onVideoStart(event:AppletStartedEvent):void {
-            trace("onViewStreamStart", event.videoWidth, event.videoHeight);
-            videoRect = new Rectangle(0, 0, event.videoWidth, event.videoHeight);
-            buildVideo();
-        }
-
-        private function onUpdateCursorEvent(event:CursorEvent):void {
-            if (video == null) return;
-
-            var newX:int = (event.x / video.videoWidth) * video.width;
-            var newY:int = (event.y / video.videoHeight) * video.height;
-
-            cursorImg.visible = true;
-
-            cursorImg.x = newX;
-            cursorImg.y = newY;
-        }
-
-        private function onResize(event:Event):void {
-            trace("onResize", event);
-            containerRect = new Rectangle(0, 0, parent.width, parent.height);
-            resizeVideo(containerRect);
-        }
-
-        private function onToggleFullscreen():void {
-            if (stage.displayState != StageDisplayState.FULL_SCREEN) {
-                stage.displayState = StageDisplayState.FULL_SCREEN;
-            } else {
-                stage.displayState = StageDisplayState.NORMAL;
-            }
-        }
-
-        private function onFullScreen(event:FullScreenEvent):void {
-            trace("onFullScreen", event);
-            if (event.fullScreen) {
-                fullscreen.visible = false;
-                resizeVideo(new Rectangle(0, 0, stage.fullScreenWidth, stage.fullScreenHeight));
-                stage.fullScreenSourceRect = new Rectangle(video.x, video.y, video.width, video.height);
-            } else {
-                fullscreen.visible = true;
-                resizeVideo(containerRect);
-            }
-        }
-
-//        PRIVATE
-        // app init
-        private function setupFullscreenVideo(showFS:String):void {
-            fullscreen.visible = String(showFS) == "true";
-            stage.addEventListener(FullScreenEvent.FULL_SCREEN, onFullScreen);
-            ExternalInterface.addCallback('closeFS', closeFS);
-        }
-
-        // app init
-        private function buildVideoHolder():void {
-            videoHolder = new UIComponent();
-            vbox.addChild(videoHolder);
-            videoHolder.addChild(cursorImg);
-        }
-
-        private function buildVideo():void {
-            video = new Video(videoRect.width, videoRect.height);
-            video.smoothing = true;
-            service.attachVideo(video, room);
-            videoHolder.addChild(video);
-            resizeVideo(containerRect);
-        }
-
-        private function resizeVideo(boundsRect:Rectangle):void {
-            var updatedSize:Rectangle = scaleRectToFit(videoRect, boundsRect);
-            videoHolder.width = video.width = updatedSize.width;
-            videoHolder.height = video.height = updatedSize.height;
-        }
-
-        private function scaleRectToFit(sourceRect:Rectangle, boundsRect:Rectangle):Rectangle {
-            trace("scaleRectToFit", sourceRect, boundsRect);
-            var sourceAspectRatio:Number = (sourceRect.width / sourceRect.height);
-            var targetAspectRatio:Number = (boundsRect.height / boundsRect.width);
-            var result:Rectangle = new Rectangle(0, 0, Math.min(boundsRect.width, sourceRect.width),
-                    Math.min(boundsRect.height, sourceRect.height));
-
-            if (targetAspectRatio >= sourceAspectRatio) {
-                result.width = result.height * sourceAspectRatio;
-            } else {
-                result.height = result.width / sourceAspectRatio;
-            }
-
-            return result;
-        }
-        ]]>
+        return result;
+      }
+      ]]>
     </mx:Script>
 
     <mx:Canvas id="vbox" width="100%" height="100%" />

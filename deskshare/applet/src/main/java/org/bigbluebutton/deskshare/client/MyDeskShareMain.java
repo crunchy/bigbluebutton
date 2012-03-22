@@ -33,7 +33,7 @@ public class MyDeskShareMain implements ClientListener {
     public static void main(String[] args) {
 	MyDeskShareMain dsMain = new MyDeskShareMain();
 
-	String hostValue = "bbb-staging.crunchconnect.com";
+	String hostValue = "ss-staging-us.salescrunch.com";
 	String roomId = "mr7";
 	int listenPortValue = DESKSHARE_PORT;
 
