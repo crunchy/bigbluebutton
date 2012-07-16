@@ -30,6 +30,8 @@
 
     <mate:Listener type="{AppletStartedEvent.APPLET_STARTED}" method="onVideoStart"/>
     <mate:Listener type="{CursorEvent.UPDATE_CURSOR_LOC_EVENT}" method="onUpdateCursorEvent"/>
+    <mate:Listener type="{Event.ACTIVATE}" method="onActivate"/>
+    <mate:Listener type="{Event.DEACTIVATE}" method="onDeactivate"/>
     <mx:Script>
         <![CDATA[
       //        * Connection delegates to NetConnection: Provides wrapper for connecting and events
@@ -82,9 +84,15 @@
       private var host:String;
       private var room:String;
 
+      internal var _isActive:Boolean = false;
+
       //        PUBLIC
       public function closeFS():void {
         stage.displayState = StageDisplayState.NORMAL;
+      }
+
+      public function isActive():Boolean {
+        return _isActive;
       }
 
       //        EVENT HANDLERS
@@ -104,6 +112,7 @@
         service.initializeErrorHandler(errorReporter);
         service.connect(host + "/" + room);
 
+        ExternalInterface.addCallback('isActive', isActive);
         setupFullscreenVideo(p.FULL_SCREEN);
         buildVideoHolder();
       }
@@ -150,6 +159,14 @@
           fullscreen.visible = true;
           resizeVideo(containerRect);
         }
+      }
+
+      private function onActivate(event:Event):void {
+        _isActive = true;
+      }
+
+      private function onDeactivate(event:Event):void {
+        _isActive = false;
       }
 
       //        PRIVATE
